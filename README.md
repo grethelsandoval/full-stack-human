@@ -3,8 +3,8 @@
 A responsive Spanish-language Web3 talent landing page built with React, TypeScript, Tailwind CSS, Vite, and Lucide. Includes a custom orbital hero, impact cards, keyboard-accessible BESSI tabs, three training modules, a credential preview, trainer methodology, and responsive navigation.
 
 The `/app` route hosts the FSH Hub dApp MVP on **Stellar testnet**: Google
-sign-in through a Pollar embedded wallet, Friendbot XLM prefunding, Blend
-Capital test USDC, XLM/USDC balances, module selection, scheduling, and a
+sign-in through a Pollar embedded wallet, Friendbot XLM prefunding, Circle
+test USDC (the asset Trustless Work documents for testnet), XLM/USDC balances, module selection, scheduling, and a
 Trustless Work (Soroban) single-release escrow that is funded before the
 session and released by the user once the session took place.
 
@@ -37,10 +37,10 @@ the dApp itself uses hash routes (`/app#/modulo/…`, `/app#/agendar/…`,
 
 Copy `.env.example` to `.env` and fill in:
 
-| Variable | Purpose |
-| --- | --- |
+| Variable                      | Purpose                                                                                                                                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `VITE_POLLAR_PUBLISHABLE_KEY` | Pollar project key. The provider is pinned to `stellarNetwork: "testnet"`; login uses `{ provider: "google" }`. Add the site origin to the allowed origins of the Pollar project. |
-| `VITE_TRUSTLESS_WORK_API_KEY` | Trustless Work API key. The app always talks to the development/testnet API (`https://dev.api.trustlesswork.com`). |
+| `VITE_TRUSTLESS_WORK_API_KEY` | Trustless Work API key. The app always talks to the development/testnet API (`https://dev.api.trustlesswork.com`).                                                                |
 
 Without `VITE_POLLAR_PUBLISHABLE_KEY` the login screen renders with the Google
 button disabled and an explanatory notice. Without `VITE_TRUSTLESS_WORK_API_KEY`
@@ -52,12 +52,19 @@ that the escrow cannot be deployed.
 1. **Google sign-in (Pollar)** creates or restores the user's embedded Stellar wallet.
 2. **Friendbot** funds the account with test XLM automatically the first time the
    account does not exist on Horizon; a manual button is also available.
-3. **Blend test USDC**: the faucet (`getAssets?userId=<G…>`) returns a base64 XDR
-   wrapped in JSON. The app signs and submits it with the Pollar wallet, which
-   adds the trustline and pays test USDC (issuer
-   `GATALTGTWIOT6BUDBCZM3Q4OQ4BO2COLOAZ7IYSKPLC2PMSOPPGF5V56`).
+3. **Test USDC (Circle)**: the "Obtener USDC de prueba" button creates the
+   USDC trustline with the Pollar wallet (`setTrustline`) when it is missing and
+   opens the Circle faucet (<https://faucet.circle.com>, network _Stellar
+   Testnet_), which sends 20 test USDC per address every 2 hours. Asset details
+   for the Pollar dashboard (enabled assets, testnet):
+   - code `USDC`
+   - issuer `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`
+
+   The platform and trainer role accounts already hold this trustline (all
+   escrow parties need it before funding).
+
 4. **Balances** (XLM + USDC) come from Horizon testnet.
-5. **Escrow**: paying a session deploys a Trustless Work *single-release* escrow
+5. **Escrow**: paying a session deploys a Trustless Work _single-release_ escrow
    (30 USDC, user = approver + release signer, trainer = service provider +
    receiver, FSH platform = platform address + dispute resolver), then funds it.
    Both steps are signed by the user's Pollar wallet. The contract ID is shown

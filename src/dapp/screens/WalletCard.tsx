@@ -39,7 +39,7 @@ export default function WalletCard({
 
       <dl className="da-balances">
         <div>
-          <dt>USDC (Blend Testnet)</dt>
+          <dt>USDC (Circle Testnet)</dt>
           <dd data-testid="usdc-balance">
             {wallet.loading && !balances.exists ? (
               <Spinner />
@@ -86,7 +86,7 @@ export default function WalletCard({
           }
         >
           {task === "faucet" ? <Spinner /> : <Coins size={16} />}
-          Obtener USDC de prueba (Blend)
+          Obtener USDC de prueba
         </button>
         <button
           type="button"

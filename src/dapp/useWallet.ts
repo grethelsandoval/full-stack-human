@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePollar } from "@pollar/react";
+import { USDC, USDC_FAUCET_URL } from "./config";
 import {
   EMPTY_BALANCES,
   fetchBalances,
-  fetchBlendFaucetXdr,
   fundWithFriendbot,
   type Balances,
 } from "./stellar";
@@ -103,21 +103,37 @@ export function useWallet(): WalletState {
     [pollar],
   );
 
+  /**
+   * Ensures the USDC trustline exists (signed by the Pollar wallet) and then
+   * opens the Circle testnet faucet so the user can request test USDC.
+   */
   const claimUsdc = useCallback(async () => {
     if (!address) return;
     setTask("faucet");
     setError(null);
     try {
-      const xdr = await fetchBlendFaucetXdr(address);
-      await signAndSubmit(xdr);
-      await refresh();
-      setNotice("Blend Capital acreditó USDC de prueba en tu billetera.");
+      const current = await refresh();
+      if (!current.hasUsdcTrustline) {
+        const outcome = await pollar.setTrustline({
+          code: USDC.code,
+          issuer: USDC.issuer,
+        });
+        if (outcome.status === "error")
+          throw new Error(
+            outcome.details ?? "No se pudo crear la trustline de USDC.",
+          );
+        await refresh();
+      }
+      window.open(USDC_FAUCET_URL, "_blank", "noopener");
+      setNotice(
+        "Trustline USDC lista. Pide USDC de prueba en el faucet de Circle (red Stellar) con tu dirección y pulsa actualizar.",
+      );
     } catch (cause) {
       setError(describeError(cause));
     } finally {
       setTask("idle");
     }
-  }, [address, refresh, signAndSubmit]);
+  }, [address, pollar, refresh]);
 
   useEffect(() => {
     if (!address) return;

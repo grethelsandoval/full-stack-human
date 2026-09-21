@@ -1,4 +1,4 @@
-import { BLEND_FAUCET_URL, FRIENDBOT_URL, HORIZON_URL, USDC } from "./config";
+import { FRIENDBOT_URL, HORIZON_URL, USDC } from "./config";
 
 export interface Balances {
   exists: boolean;
@@ -50,23 +50,6 @@ export async function fundWithFriendbot(address: string): Promise<void> {
   if (response.status === 400 && /createAccountAlreadyExist/i.test(body))
     return;
   throw new Error(`Friendbot respondió ${response.status}.`);
-}
-
-/**
- * The Blend faucet returns a JSON-encoded base64 transaction envelope that
- * adds the USDC/BLND/wETH/wBTC trustlines and pays test tokens. The user
- * still has to sign and submit it.
- */
-export async function fetchBlendFaucetXdr(address: string): Promise<string> {
-  const response = await fetch(
-    `${BLEND_FAUCET_URL}?userId=${encodeURIComponent(address)}`,
-  );
-  if (!response.ok)
-    throw new Error(`El faucet de Blend respondió ${response.status}.`);
-  const parsed: unknown = JSON.parse(await response.text());
-  if (typeof parsed !== "string" || parsed.length === 0)
-    throw new Error("El faucet de Blend no devolvió una transacción válida.");
-  return parsed;
 }
 
 export function shortAddress(address: string, size = 4) {

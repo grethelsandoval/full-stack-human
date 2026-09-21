@@ -29,7 +29,6 @@ import {
   type Balances,
   EMPTY_BALANCES,
   fetchBalances,
-  fetchBlendFaucetXdr,
   formatAmount,
   fundWithFriendbot,
   hasEnoughUsdc,
@@ -114,8 +113,11 @@ describe("landing → dApp link", () => {
 });
 
 describe("configuration", () => {
-  it("is testnet-only", () => {
+  it("is testnet-only and uses Trustless Work's documented testnet USDC", () => {
     expect(NETWORK).toBe("testnet");
+    expect(USDC.issuer).toBe(
+      "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+    );
     expect(FSH_PLATFORM_ADDRESS).toMatch(/^G[A-Z2-7]{55}$/);
     expect(FSH_TRAINER_ADDRESS).toMatch(/^G[A-Z2-7]{55}$/);
     expect(USDC.issuer).toMatch(/^G[A-Z2-7]{55}$/);
@@ -205,14 +207,6 @@ describe("stellar helpers", () => {
     await expect(fundWithFriendbot(USER)).rejects.toThrow();
   });
 
-  it("decodes the Blend faucet JSON-wrapped XDR", async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify("AAAAAgAAAABbase64==")),
-    );
-    expect(await fetchBlendFaucetXdr(USER)).toBe("AAAAAgAAAABbase64==");
-    expect(String(fetchMock.mock.calls[0][0])).toContain(`userId=${USER}`);
-  });
-
   it("formats amounts and addresses", () => {
     expect(formatAmount("42.5000000")).toBe("42.50");
     expect(formatAmount("abc")).toBe("0.00");
@@ -238,12 +232,12 @@ describe("wallet card", () => {
     );
     expect(wallet.fundXlm).toHaveBeenCalledOnce();
     await userEvent.click(
-      screen.getByRole("button", { name: /Obtener USDC de prueba \(Blend\)/ }),
+      screen.getByRole("button", { name: /Obtener USDC de prueba/ }),
     );
     expect(wallet.claimUsdc).toHaveBeenCalledOnce();
   });
 
-  it("blocks the Blend faucet until the account exists on testnet", () => {
+  it("blocks the USDC faucet until the account exists on testnet", () => {
     render(
       <WalletCard
         wallet={walletState({

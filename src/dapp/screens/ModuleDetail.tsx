@@ -228,7 +228,7 @@ export default function ModuleDetail({
               <div>
                 <dt>Activo del escrow:</dt>
                 <dd>
-                  <code>{USDC.code} · Blend Testnet</code>
+                  <code>{USDC.code} · Circle Testnet</code>
                 </dd>
               </div>
               <div>

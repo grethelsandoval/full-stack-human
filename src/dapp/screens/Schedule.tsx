@@ -343,13 +343,13 @@ export default function Schedule({
         {method === "fiat" && (
           <Notice>
             La pasarela integrada Pollar (tarjeta / Apple Pay → USDC) llegará en
-            la siguiente fase. En testnet, paga con los USDC de prueba de Blend.
+            la siguiente fase. En testnet, paga con USDC de prueba (Circle).
           </Notice>
         )}
         {method === "wallet" && !enough && (
           <Notice tone="error" role="alert">
             Necesitas al menos {SESSION_PRICE_USD} USDC de prueba. Usa el botón
-            «Obtener USDC de prueba (Blend)» y vuelve a intentar.
+            «Obtener USDC de prueba» y vuelve a intentar.
           </Notice>
         )}
 

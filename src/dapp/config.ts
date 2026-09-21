@@ -6,15 +6,14 @@ export const HORIZON_URL = "https://horizon-testnet.stellar.org";
 export const FRIENDBOT_URL = "https://friendbot.stellar.org/";
 export const STELLAR_EXPERT = "https://stellar.expert/explorer/testnet";
 
-/** Blend Capital testnet faucet (same endpoint the official Blend UI uses). */
-export const BLEND_FAUCET_URL =
-  "https://ewqw4hx7oa.execute-api.us-east-1.amazonaws.com/getAssets";
+/** Circle testnet faucet (select "Stellar Testnet", paste the wallet address). */
+export const USDC_FAUCET_URL = "https://faucet.circle.com";
 
-/** USDC issued by the Blend Capital testnet faucet. */
+/** Circle testnet USDC — the asset Trustless Work documents for testnet escrows. */
 export const USDC = {
   code: "USDC",
-  issuer: "GATALTGTWIOT6BUDBCZM3Q4OQ4BO2COLOAZ7IYSKPLC2PMSOPPGF5V56",
-  contract: "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
+  issuer: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+  label: "USDC de prueba (Circle)",
 } as const;
 
 /** FSH Hub testnet role accounts (public keys only). */
