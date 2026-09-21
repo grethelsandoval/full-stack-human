@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 export const repository =
-  "https://github.com/grethelsandoval97-dot/full-stack-human";
+  "https://github.com/grethelsandoval/full-stack-human";
 
 export const domains = [
   {
