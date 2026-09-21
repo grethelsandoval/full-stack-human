@@ -10,7 +10,8 @@ import {
   Zap,
 } from "lucide-react";
 
-export const repository = "https://github.com/grethelsandoval97-dot/fsh-hub";
+export const repository =
+  "https://github.com/grethelsandoval97-dot/full-stack-human";
 
 export const domains = [
   {
