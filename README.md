@@ -65,7 +65,7 @@ that the escrow cannot be deployed.
 
 4. **Balances** (XLM + USDC) come from Horizon testnet.
 5. **Escrow**: paying a session deploys a Trustless Work _single-release_ escrow
-   (30 USDC, user = approver + release signer, trainer = service provider +
+   (10 USDC, user = approver + release signer, trainer = service provider +
    receiver, FSH platform = platform address + dispute resolver), then funds it.
    Both steps are signed by the user's Pollar wallet. The contract ID is shown
    with a Stellar Expert link and stored in `localStorage` per wallet.

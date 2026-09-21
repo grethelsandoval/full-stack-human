@@ -212,10 +212,10 @@ describe("stellar helpers", () => {
     expect(formatAmount("abc")).toBe("0.00");
     expect(shortAddress(USER)).toBe("GAUS...XXXA");
     expect(
-      hasEnoughUsdc({ ...EMPTY_BALANCES, usdc: "30" }, SESSION_PRICE_USD),
+      hasEnoughUsdc({ ...EMPTY_BALANCES, usdc: "10" }, SESSION_PRICE_USD),
     ).toBe(true);
     expect(
-      hasEnoughUsdc({ ...EMPTY_BALANCES, usdc: "29.99" }, SESSION_PRICE_USD),
+      hasEnoughUsdc({ ...EMPTY_BALANCES, usdc: "9.99" }, SESSION_PRICE_USD),
     ).toBe(false);
   });
 });
@@ -341,7 +341,7 @@ describe("scheduling", () => {
       />,
     );
     const payButton = screen.getByRole("button", {
-      name: /Pagar \$30\.00 USD/,
+      name: /Pagar \$10\.00 USD/,
     });
     expect(payButton).toBeDisabled();
     const day22 = screen
@@ -382,7 +382,7 @@ describe("scheduling", () => {
         now={today}
       />,
     );
-    expect(screen.getByRole("alert")).toHaveTextContent(/al menos 30 USDC/);
+    expect(screen.getByRole("alert")).toHaveTextContent(/al menos 10 USDC/);
     expect(screen.getByRole("button", { name: /Pagar/ })).toBeDisabled();
   });
 
