@@ -228,7 +228,7 @@ export default function App() {
               </a>
             ))}
           </nav>
-          <a href="#modulos" className="nav-cta">
+          <a href="/app" className="nav-cta">
             Comienza tu evolución <ArrowUpRight size={16} />
           </a>
           <button
@@ -751,7 +751,7 @@ export default function App() {
               <span className="gradient-text">Con todas tus habilidades.</span>
             </h2>
             <p>Tu siguiente gran versión empieza por lo humano.</p>
-            <a className="button button-primary" href="#modulos">
+            <a className="button button-primary" href="/app">
               Comenzar mi evolución
               <ArrowRight size={18} />
             </a>
