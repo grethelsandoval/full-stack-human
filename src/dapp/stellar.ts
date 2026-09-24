@@ -1,4 +1,4 @@
-import { FRIENDBOT_URL, HORIZON_URL, USDC } from "./config";
+import { FRIENDBOT_URL, HORIZON_URL, STELLAR_EXPERT, USDC } from "./config";
 
 export interface Balances {
   exists: boolean;
@@ -41,15 +41,57 @@ export async function fetchBalances(address: string): Promise<Balances> {
   };
 }
 
-export async function fundWithFriendbot(address: string): Promise<void> {
+export async function fundWithFriendbot(
+  address: string,
+): Promise<string | undefined> {
   const response = await fetch(
     `${FRIENDBOT_URL}?addr=${encodeURIComponent(address)}`,
   );
-  if (response.ok) return;
   const body = await response.text();
+  if (response.ok) {
+    try {
+      const parsed: unknown = JSON.parse(body);
+      if (hasHash(parsed)) return parsed.hash;
+    } catch {
+      /* Friendbot answered without a JSON body */
+    }
+    return undefined;
+  }
   if (response.status === 400 && /createAccountAlreadyExist/i.test(body))
-    return;
+    return undefined;
   throw new Error(`Friendbot respondió ${response.status}.`);
+}
+
+function hasHash(value: unknown): value is { hash: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "hash" in value &&
+    typeof value.hash === "string"
+  );
+}
+
+/** Hash of the most recent transaction submitted by `address` (Horizon). */
+export async function latestTxHash(
+  address: string,
+): Promise<string | undefined> {
+  try {
+    const response = await fetch(
+      `${HORIZON_URL}/accounts/${address}/transactions?order=desc&limit=1`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!response.ok) return undefined;
+    const page = (await response.json()) as {
+      _embedded?: { records?: { hash?: string }[] };
+    };
+    return page._embedded?.records?.[0]?.hash;
+  } catch {
+    return undefined;
+  }
+}
+
+export function txUrl(hash: string) {
+  return `${STELLAR_EXPERT}/tx/${hash}`;
 }
 
 export function shortAddress(address: string, size = 4) {

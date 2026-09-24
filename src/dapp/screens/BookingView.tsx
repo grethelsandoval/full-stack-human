@@ -18,7 +18,7 @@ import {
 } from "../bookings";
 import { trainer, type TrainingModule } from "../catalog";
 import { FSH_TRAINER_ADDRESS, STELLAR_EXPERT } from "../config";
-import { CopyAddress, Notice, Spinner } from "../ui";
+import { CopyAddress, Notice, Spinner, TxLink } from "../ui";
 
 export type ReleaseStep = "idle" | "fund" | "approve" | "release";
 
@@ -27,11 +27,23 @@ export interface ReleaseState {
   error: string | null;
 }
 
-const timeline: { status: Booking["status"]; label: string }[] = [
-  { status: "created", label: "Escrow desplegado en Soroban" },
-  { status: "funded", label: "USDC depositados en el escrow" },
-  { status: "approved", label: "Sesión confirmada por el usuario" },
-  { status: "released", label: "Pago liberado a la entrenadora" },
+const timeline: {
+  status: Booking["status"];
+  label: string;
+  tx: keyof Booking["txHashes"];
+}[] = [
+  { status: "created", label: "Escrow desplegado en Soroban", tx: "deploy" },
+  { status: "funded", label: "USDC depositados en el escrow", tx: "fund" },
+  {
+    status: "approved",
+    label: "Sesión confirmada por el usuario",
+    tx: "approve",
+  },
+  {
+    status: "released",
+    label: "Pago liberado a la entrenadora",
+    tx: "release",
+  },
 ];
 
 const ORDER: Booking["status"][] = [
@@ -150,17 +162,23 @@ export default function BookingView({
           </button>
         </div>
         <ol className="da-timeline">
-          {timeline.map((item, index) => (
-            <li
-              key={item.status}
-              className={
-                index <= stage ? "done" : index === stage + 1 ? "next" : ""
-              }
-            >
-              <span>{index <= stage ? <Check size={14} /> : index + 1}</span>
-              {item.label}
-            </li>
-          ))}
+          {timeline.map((item, index) => {
+            const hash = booking.txHashes[item.tx];
+            return (
+              <li
+                key={item.status}
+                className={
+                  index <= stage ? "done" : index === stage + 1 ? "next" : ""
+                }
+              >
+                <span>{index <= stage ? <Check size={14} /> : index + 1}</span>
+                <div className="da-timeline-body">
+                  {item.label}
+                  {hash && <TxLink hash={hash} label="Tx" />}
+                </div>
+              </li>
+            );
+          })}
         </ol>
         {onchain && (
           <dl className="da-kv da-onchain">

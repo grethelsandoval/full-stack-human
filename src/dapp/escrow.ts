@@ -19,6 +19,7 @@ import {
   SESSION_PRICE_USD,
   USDC,
 } from "./config";
+import { latestTxHash } from "./stellar";
 
 export const ESCROW_TYPE = "single-release" as const;
 
@@ -76,9 +77,18 @@ export interface EscrowActions {
     signer: EscrowSigner,
     sessionAt: string,
   ) => Promise<{ contractId: string; engagementId: string; hash?: string }>;
-  fund: (contractId: string, signer: EscrowSigner) => Promise<string>;
-  approve: (contractId: string, signer: EscrowSigner) => Promise<string>;
-  release: (contractId: string, signer: EscrowSigner) => Promise<string>;
+  fund: (
+    contractId: string,
+    signer: EscrowSigner,
+  ) => Promise<string | undefined>;
+  approve: (
+    contractId: string,
+    signer: EscrowSigner,
+  ) => Promise<string | undefined>;
+  release: (
+    contractId: string,
+    signer: EscrowSigner,
+  ) => Promise<string | undefined>;
   read: (contractId: string) => Promise<GetEscrowsFromIndexerResponse | null>;
 }
 
@@ -99,10 +109,12 @@ export function useEscrow(): EscrowActions {
       if (!unsigned)
         throw new Error(`Trustless Work no devolvió la transacción (${step}).`);
       const signed = await signer.signXdr(unsigned);
-      return assertSuccess(
+      const result = assertSuccess(
         await sendTransaction(signed),
         `La red rechazó la transacción (${step}).`,
       );
+      const hash = await latestTxHash(signer.address);
+      return { ...result, hash };
     },
     [sendTransaction],
   );
@@ -124,10 +136,10 @@ export function useEscrow(): EscrowActions {
         unsignedTransaction,
         signer,
         "deploy",
-      )) as Partial<InitializeSingleReleaseEscrowResponse>;
+      )) as Partial<InitializeSingleReleaseEscrowResponse> & { hash?: string };
       if (!result.contractId)
         throw new Error("Trustless Work no devolvió el ID del contrato.");
-      return { contractId: result.contractId, engagementId };
+      return { contractId: result.contractId, engagementId, hash: result.hash };
     },
     [deployEscrow, signAndSend],
   );
@@ -142,7 +154,7 @@ export function useEscrow(): EscrowActions {
         "No se pudo preparar el pago al escrow.",
       );
       const result = await signAndSend(unsignedTransaction, signer, "fund");
-      return result.message;
+      return result.hash;
     },
     [fundEscrow, signAndSend],
   );
@@ -162,7 +174,7 @@ export function useEscrow(): EscrowActions {
         "No se pudo preparar la confirmación de la sesión.",
       );
       const result = await signAndSend(unsignedTransaction, signer, "approve");
-      return result.message;
+      return result.hash;
     },
     [approveMilestone, signAndSend],
   );
@@ -177,7 +189,7 @@ export function useEscrow(): EscrowActions {
         "No se pudo preparar la liberación de fondos.",
       );
       const result = await signAndSend(unsignedTransaction, signer, "release");
-      return result.message;
+      return result.hash;
     },
     [releaseFunds, signAndSend],
   );

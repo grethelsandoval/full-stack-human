@@ -1,7 +1,7 @@
 import { AtSign, Coins, Droplets, RefreshCw, Zap } from "lucide-react";
 import { STELLAR_EXPERT } from "../config";
 import { formatAmount } from "../stellar";
-import { CopyAddress, Notice, Spinner } from "../ui";
+import { CopyAddress, Notice, Spinner, TxLink } from "../ui";
 import type { WalletState } from "../useWallet";
 
 export default function WalletCard({
@@ -99,7 +99,20 @@ export default function WalletCard({
         </button>
       </div>
 
-      {wallet.notice && <Notice tone="success">{wallet.notice}</Notice>}
+      {wallet.notice && (
+        <Notice tone="success">
+          {wallet.notice}
+          {wallet.lastTx && (
+            <>
+              {" "}
+              <TxLink
+                hash={wallet.lastTx.hash}
+                label={`Tx ${wallet.lastTx.label}`}
+              />
+            </>
+          )}
+        </Notice>
+      )}
       {wallet.error && (
         <Notice tone="error" role="alert">
           {wallet.error}

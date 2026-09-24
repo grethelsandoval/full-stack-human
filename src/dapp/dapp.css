@@ -1318,7 +1318,18 @@
   font-size: 0.88rem;
   color: var(--da-dim);
 }
-.da-timeline li span {
+.da-timeline-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+}
+.da-txlink code {
+  font-family: var(--da-font-mono);
+  font-size: 0.75rem;
+}
+.da-timeline li > span {
+  flex: none;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -1332,11 +1343,11 @@
 .da-timeline li.done {
   color: var(--da-text);
 }
-.da-timeline li.done span {
+.da-timeline li.done > span {
   background: var(--da-mint);
   color: #04110c;
 }
-.da-timeline li.next span {
+.da-timeline li.next > span {
   border: 1px dashed rgba(173, 198, 255, 0.5);
 }
 .da-onchain {

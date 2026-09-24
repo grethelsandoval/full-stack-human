@@ -10,6 +10,11 @@ import {
 
 export type WalletTask = "idle" | "friendbot" | "faucet" | "refreshing";
 
+export interface WalletTx {
+  label: string;
+  hash: string;
+}
+
 export interface WalletState {
   address: string | null;
   email: string | null;
@@ -20,6 +25,7 @@ export interface WalletState {
   task: WalletTask;
   error: string | null;
   notice: string | null;
+  lastTx: WalletTx | null;
   login: () => void;
   logout: () => void;
   refresh: () => Promise<Balances>;
@@ -42,6 +48,7 @@ export function useWallet(): WalletState {
   const [task, setTask] = useState<WalletTask>("idle");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [lastTx, setLastTx] = useState<WalletTx | null>(null);
   const autoFunded = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -64,9 +71,10 @@ export function useWallet(): WalletState {
     setTask("friendbot");
     setError(null);
     try {
-      await fundWithFriendbot(address);
+      const hash = await fundWithFriendbot(address);
       await refresh();
       setNotice("Friendbot depositó XLM de prueba para cubrir el gas.");
+      if (hash) setLastTx({ label: "Friendbot", hash });
     } catch (cause) {
       setError(describeError(cause));
     } finally {
@@ -123,6 +131,8 @@ export function useWallet(): WalletState {
             outcome.details ?? "No se pudo crear la trustline de USDC.",
           );
         await refresh();
+        if (outcome.hash)
+          setLastTx({ label: "Trustline USDC", hash: outcome.hash });
       }
       window.open(USDC_FAUCET_URL, "_blank", "noopener");
       setNotice(
@@ -161,10 +171,12 @@ export function useWallet(): WalletState {
     task,
     error: address ? error : null,
     notice: address ? notice : null,
+    lastTx: address ? lastTx : null,
     login: () => pollar.login({ provider: "google" }),
     logout: () => {
       setBalances(EMPTY_BALANCES);
       setNotice(null);
+      setLastTx(null);
       setError(null);
       pollar.logout();
     },

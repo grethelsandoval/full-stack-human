@@ -147,13 +147,13 @@ export default function DApp({
         sessionAt: sessionAt.toISOString(),
         timezone,
         status: "created",
-        txHashes: {},
+        txHashes: deployed.hash ? { deploy: deployed.hash } : {},
         createdAt: new Date().toISOString(),
       };
       persist(booking);
       setPay({ step: "fund", error: null });
-      await escrow.fund(booking.contractId, signer);
-      booking = advanceBooking(booking, undefined);
+      const fundHash = await escrow.fund(booking.contractId, signer);
+      booking = advanceBooking(booking, fundHash);
       persist(booking);
       setPay({ step: "done", error: null });
       void wallet.refresh();
@@ -170,8 +170,8 @@ export default function DApp({
     if (!signer) return;
     setRelease({ step: "fund", error: null });
     try {
-      await escrow.fund(booking.contractId, signer);
-      persist(advanceBooking(booking, undefined));
+      const hash = await escrow.fund(booking.contractId, signer);
+      persist(advanceBooking(booking, hash));
       void wallet.refresh();
     } catch (cause) {
       setRelease({ step: "idle", error: describeError(cause) });
@@ -184,8 +184,8 @@ export default function DApp({
     if (!signer) return;
     setRelease({ step: "approve", error: null });
     try {
-      await escrow.approve(booking.contractId, signer);
-      persist(advanceBooking(booking, undefined));
+      const hash = await escrow.approve(booking.contractId, signer);
+      persist(advanceBooking(booking, hash));
       setRelease({ step: "idle", error: null });
       void refreshOnchain(booking.contractId);
     } catch (cause) {
@@ -197,8 +197,8 @@ export default function DApp({
     if (!signer) return;
     setRelease({ step: "release", error: null });
     try {
-      await escrow.release(booking.contractId, signer);
-      persist(advanceBooking(booking, undefined));
+      const hash = await escrow.release(booking.contractId, signer);
+      persist(advanceBooking(booking, hash));
       setRelease({ step: "idle", error: null });
       void refreshOnchain(booking.contractId);
     } catch (cause) {

@@ -6,13 +6,14 @@ import {
   Check,
   CircleUserRound,
   Copy,
+  ExternalLink,
   Layers3,
   LayoutDashboard,
   Menu,
 } from "lucide-react";
 import { useState } from "react";
 import { APP_VERSION, NETWORK_LABEL } from "./config";
-import { shortAddress } from "./stellar";
+import { shortAddress, txUrl } from "./stellar";
 
 export type Tab = "dashboard" | "modulos" | "certificados" | "perfil";
 
@@ -167,6 +168,26 @@ export function Notice({
     <p className={`da-notice ${tone}`} role={role}>
       {children}
     </p>
+  );
+}
+
+export function TxLink({
+  hash,
+  label = "Ver transacción",
+}: {
+  hash: string;
+  label?: string;
+}) {
+  return (
+    <a
+      className="da-link da-txlink"
+      href={txUrl(hash)}
+      target="_blank"
+      rel="noreferrer"
+      title={hash}
+    >
+      {label} <code>{shortAddress(hash, 4)}</code> <ExternalLink size={12} />
+    </a>
   );
 }
 

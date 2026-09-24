@@ -32,7 +32,9 @@ import {
   formatAmount,
   fundWithFriendbot,
   hasEnoughUsdc,
+  latestTxHash,
   shortAddress,
+  txUrl,
 } from "./stellar";
 import type { WalletState } from "./useWallet";
 
@@ -54,6 +56,7 @@ function walletState(overrides: Partial<WalletState> = {}): WalletState {
     task: "idle",
     error: null,
     notice: null,
+    lastTx: null,
     login: vi.fn(),
     logout: vi.fn(),
     refresh: vi.fn(async () => EMPTY_BALANCES),
@@ -192,8 +195,10 @@ describe("stellar helpers", () => {
   });
 
   it("funds through Friendbot and tolerates already-funded accounts", async () => {
-    fetchMock.mockResolvedValueOnce(new Response("{}", { status: 200 }));
-    await fundWithFriendbot(USER);
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ hash: "abc123" }), { status: 200 }),
+    );
+    expect(await fundWithFriendbot(USER)).toBe("abc123");
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       `https://friendbot.stellar.org/?addr=${USER}`,
     );
@@ -205,6 +210,24 @@ describe("stellar helpers", () => {
     await expect(fundWithFriendbot(USER)).resolves.toBeUndefined();
     fetchMock.mockResolvedValueOnce(new Response("boom", { status: 500 }));
     await expect(fundWithFriendbot(USER)).rejects.toThrow();
+  });
+
+  it("resolves the latest Horizon tx hash and builds explorer links", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ _embedded: { records: [{ hash: "deadbeef" }] } }),
+        { status: 200 },
+      ),
+    );
+    expect(await latestTxHash(USER)).toBe("deadbeef");
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      `/accounts/${USER}/transactions?order=desc&limit=1`,
+    );
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 500 }));
+    expect(await latestTxHash(USER)).toBeUndefined();
+    expect(txUrl("deadbeef")).toBe(
+      "https://stellar.expert/explorer/testnet/tx/deadbeef",
+    );
   });
 
   it("formats amounts and addresses", () => {
@@ -235,6 +258,21 @@ describe("wallet card", () => {
       screen.getByRole("button", { name: /Obtener USDC de prueba/ }),
     );
     expect(wallet.claimUsdc).toHaveBeenCalledOnce();
+  });
+
+  it("links the last wallet transaction to Stellar Expert", () => {
+    render(
+      <WalletCard
+        wallet={walletState({
+          notice: "Friendbot depositó XLM.",
+          lastTx: { label: "Friendbot", hash: "feedface" },
+        })}
+      />,
+    );
+    expect(screen.getByRole("link", { name: /Tx Friendbot/ })).toHaveAttribute(
+      "href",
+      "https://stellar.expert/explorer/testnet/tx/feedface",
+    );
   });
 
   it("blocks the USDC faucet until the account exists on testnet", () => {
@@ -470,7 +508,10 @@ describe("escrow", () => {
   it("only offers release after the session has happened and been approved", async () => {
     const before = new Date("2026-10-01T00:00:00Z");
     const after = new Date("2026-10-06T00:00:00Z");
-    const funded = booking({ status: "funded" });
+    const funded = booking({
+      status: "funded",
+      txHashes: { deploy: "h-deploy", fund: "h-fund" },
+    });
     expect(sessionHasPassed(funded, before)).toBe(false);
     expect(sessionHasPassed(funded, after)).toBe(true);
 
@@ -490,6 +531,11 @@ describe("escrow", () => {
       <BookingView {...props} booking={funded} now={before} />,
     );
     expect(screen.getByText("CCONTRACT")).toBeInTheDocument();
+    const txLinks = screen.getAllByRole("link", { name: /^Tx / });
+    expect(txLinks.map((a) => a.getAttribute("href"))).toEqual([
+      "https://stellar.expert/explorer/testnet/tx/h-deploy",
+      "https://stellar.expert/explorer/testnet/tx/h-fund",
+    ]);
     expect(
       screen.queryByRole("button", { name: /Liberar pago/ }),
     ).not.toBeInTheDocument();
