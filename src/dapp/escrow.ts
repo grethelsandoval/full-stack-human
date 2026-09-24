@@ -167,7 +167,6 @@ export function useEscrow(): EscrowActions {
             contractId,
             milestoneIndex: "0",
             approver: signer.address,
-            newEvidence: "Sesión 1 completada y confirmada por el usuario.",
           },
           ESCROW_TYPE,
         ),
