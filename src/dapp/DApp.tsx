@@ -9,10 +9,17 @@ import {
 } from "./bookings";
 import { findModule, type TrainingModule } from "./catalog";
 import { LANDING_URL, NETWORK_LABEL, SESSION_PRICE_USD } from "./config";
+import {
+  clearDiagnostic,
+  type DiagnosticResult,
+  loadDiagnostic,
+  saveDiagnostic,
+} from "./diagnostic";
 import { useEscrow } from "./escrow";
 import { parseRoute, type Route, routeToHash } from "./routes";
 import BookingView, { type ReleaseState } from "./screens/BookingView";
 import Dashboard, { type UserMode } from "./screens/Dashboard";
+import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
 import Login from "./screens/Login";
 import ModuleDetail from "./screens/ModuleDetail";
 import Schedule, { type PayState } from "./screens/Schedule";
@@ -40,6 +47,11 @@ function useHashRoute() {
 function readBookings(wallet: string | null, version: number) {
   void version;
   return wallet ? loadBookings(wallet) : [];
+}
+
+function readDiagnostic(wallet: string | null, version: number) {
+  void version;
+  return wallet ? loadDiagnostic(wallet) : null;
 }
 
 function describeError(error: unknown) {
@@ -76,6 +88,26 @@ export default function DApp({
     data: GetEscrowsFromIndexerResponse | null;
   } | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [diagnosticVersion, setDiagnosticVersion] = useState(0);
+  const [diagnosticSkipped, setDiagnosticSkipped] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const diagnostic = useMemo(
+    () => readDiagnostic(wallet.address, diagnosticVersion),
+    [wallet.address, diagnosticVersion],
+  );
+  const completeDiagnostic = (result: DiagnosticResult) => {
+    saveDiagnostic(result);
+    setDiagnosticVersion((version) => version + 1);
+    setShowResults(true);
+  };
+  const restartDiagnostic = () => {
+    if (wallet.address) clearDiagnostic(wallet.address);
+    setDiagnosticVersion((version) => version + 1);
+    setDiagnosticSkipped(false);
+    setShowResults(false);
+    navigate({ name: "dashboard" });
+  };
 
   const bookings = useMemo(
     () => readBookings(wallet.address, bookingsVersion),
@@ -223,6 +255,36 @@ export default function DApp({
     );
   }
 
+  if (!diagnostic && !diagnosticSkipped) {
+    return (
+      <div className="da-shell">
+        <Questionnaire
+          wallet={wallet.address}
+          onComplete={completeDiagnostic}
+          onSkip={() => setDiagnosticSkipped(true)}
+        />
+      </div>
+    );
+  }
+
+  if (diagnostic && showResults) {
+    return (
+      <div className="da-shell">
+        <DiagnosticResults
+          result={diagnostic}
+          onOpenModule={(id) => {
+            setShowResults(false);
+            navigate({ name: "module", id });
+          }}
+          onDashboard={() => {
+            setShowResults(false);
+            navigate({ name: "dashboard" });
+          }}
+        />
+      </div>
+    );
+  }
+
   const tab: Tab =
     route.name === "certificados"
       ? "certificados"
@@ -352,6 +414,22 @@ export default function DApp({
               onClick={wallet.logout}
             >
               <LogOut size={16} /> Cerrar sesión
+            </button>
+            {diagnostic ? (
+              <button
+                type="button"
+                className="da-button da-button-ghost"
+                onClick={() => setShowResults(true)}
+              >
+                Ver mi diagnóstico
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="da-button da-button-ghost"
+              onClick={restartDiagnostic}
+            >
+              {diagnostic ? "Repetir diagnóstico" : "Hacer diagnóstico"}
             </button>
             <a className="da-button da-button-ghost" href={LANDING_URL}>
               Volver a la landing

@@ -21,6 +21,18 @@ import { buildEscrowPayload, ESCROW_TYPE } from "./escrow";
 import { isDAppPath, parseRoute, routeToHash } from "./routes";
 import { buildMonthGrid, combineDateTime, isSelectableDay } from "./scheduling";
 import BookingView from "./screens/BookingView";
+import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
+import {
+  type Answers,
+  buildResult,
+  clearDiagnostic,
+  type DiagnosticResult,
+  loadDiagnostic,
+  QUESTIONS,
+  RECOMMENDED_MODULE_ID,
+  recommendedModule,
+  saveDiagnostic,
+} from "./diagnostic";
 import Dashboard from "./screens/Dashboard";
 import Login from "./screens/Login";
 import Schedule from "./screens/Schedule";
@@ -565,5 +577,74 @@ describe("escrow", () => {
     );
     expect(screen.queryByRole("button", { name: /Liberar/ })).toBeNull();
     expect(screen.getAllByText(/liberado/i).length).toBeGreaterThan(0);
+  });
+});
+
+describe("diagnostic", () => {
+  it("scores BESSI domains and prioritises the lowest ones", () => {
+    const answers: Answers = {};
+    for (const q of QUESTIONS)
+      answers[q.id] = q.domain === "compromiso" ? 1 : 5;
+    answers.q3 = 3;
+    const result = buildResult(USER, answers, new Date("2026-09-24T00:00:00Z"));
+    const byDomain = Object.fromEntries(
+      result.scores.map((s) => [s.domain, s.score]),
+    );
+    expect(byDomain.compromiso).toBe(0);
+    expect(byDomain.autogestion).toBe(100);
+    expect(byDomain.resiliencia).toBe(75);
+    expect(result.focus).toEqual(["compromiso", "resiliencia"]);
+    expect(result.strengths).not.toContain("compromiso");
+    expect(result.recommendedModuleId).toBe(RECOMMENDED_MODULE_ID);
+    expect(recommendedModule().title).toBe("Pitches de Alto Impacto");
+  });
+
+  it("persists results per wallet", () => {
+    window.localStorage.clear();
+    const result = buildResult(USER, { q1: 2 });
+    saveDiagnostic(result);
+    expect(loadDiagnostic(USER)?.completedAt).toBe(result.completedAt);
+    expect(loadDiagnostic("GOTHER")).toBeNull();
+    clearDiagnostic(USER);
+    expect(loadDiagnostic(USER)).toBeNull();
+  });
+
+  it("walks through the typeform-style questions and shows the recommendation", async () => {
+    const onComplete = vi.fn();
+    render(
+      <Questionnaire wallet={USER} onComplete={onComplete} onSkip={vi.fn()} />,
+    );
+    expect(screen.getByText(/Pregunta 1 de 10/)).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "0",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Casi nunca/ }));
+    expect(screen.getByText(/Pregunta 2 de 10/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Anterior/ }));
+    expect(screen.getByText(/Pregunta 1 de 10/)).toBeInTheDocument();
+    for (let i = 0; i < QUESTIONS.length; i++)
+      await userEvent.click(
+        screen.getByRole("button", { name: /Con frecuencia/ }),
+      );
+    expect(onComplete).toHaveBeenCalledOnce();
+    const result = onComplete.mock.calls[0][0] as DiagnosticResult;
+    expect(Object.keys(result.answers)).toHaveLength(QUESTIONS.length);
+
+    const onOpenModule = vi.fn();
+    render(
+      <DiagnosticResults
+        result={result}
+        onOpenModule={onOpenModule}
+        onDashboard={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(/Recomendado por Lic. Madai Aramayo/),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: /Ver módulo recomendado/ }),
+    );
+    expect(onOpenModule).toHaveBeenCalledWith(RECOMMENDED_MODULE_ID);
   });
 });

@@ -150,6 +150,10 @@ that the escrow cannot be deployed.
 ### Testnet flow
 
 1. **Google sign-in (Pollar)** creates or restores the user's embedded Stellar wallet.
+   Right after the first login a typeform-style BESSI questionnaire (10
+   questions, one per screen) estimates the user's five skill domains, shows
+   the results and recommends the trainer's available module; results are
+   stored per wallet and can be redone from _Perfil_.
 2. **Friendbot** funds the account with test XLM automatically the first time the
    account does not exist on Horizon; a manual button is also available.
 3. **Test USDC (Circle)**: the "Obtener USDC de prueba" button creates the
