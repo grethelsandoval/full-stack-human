@@ -16,12 +16,18 @@ import {
   saveDiagnostic,
 } from "./diagnostic";
 import { useEscrow } from "./escrow";
+import {
+  hasSeenOnboarding,
+  markOnboardingSeen,
+  resetOnboarding,
+} from "./onboarding";
 import { parseRoute, type Route, routeToHash } from "./routes";
 import BookingView, { type ReleaseState } from "./screens/BookingView";
 import Dashboard, { type UserMode } from "./screens/Dashboard";
 import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
 import Login from "./screens/Login";
 import ModuleDetail from "./screens/ModuleDetail";
+import OnboardingTour from "./screens/OnboardingTour";
 import Schedule, { type PayState } from "./screens/Schedule";
 import WalletCard from "./screens/WalletCard";
 import { BottomNav, Header, Notice, type Tab } from "./ui";
@@ -52,6 +58,11 @@ function readBookings(wallet: string | null, version: number) {
 function readDiagnostic(wallet: string | null, version: number) {
   void version;
   return wallet ? loadDiagnostic(wallet) : null;
+}
+
+function readTourPending(wallet: string | null, version: number) {
+  void version;
+  return wallet ? !hasSeenOnboarding(wallet) : false;
 }
 
 function describeError(error: unknown) {
@@ -91,6 +102,20 @@ export default function DApp({
   const [diagnosticVersion, setDiagnosticVersion] = useState(0);
   const [diagnosticSkipped, setDiagnosticSkipped] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [tourVersion, setTourVersion] = useState(0);
+  const showTour = useMemo(
+    () => readTourPending(wallet.address, tourVersion),
+    [wallet.address, tourVersion],
+  );
+  const finishTour = useCallback(() => {
+    if (wallet.address) markOnboardingSeen(wallet.address);
+    setTourVersion((version) => version + 1);
+  }, [wallet.address]);
+  const replayTour = () => {
+    if (wallet.address) resetOnboarding(wallet.address);
+    setTourVersion((version) => version + 1);
+    navigate({ name: "dashboard" });
+  };
 
   const diagnostic = useMemo(
     () => readDiagnostic(wallet.address, diagnosticVersion),
@@ -431,6 +456,13 @@ export default function DApp({
             >
               {diagnostic ? "Repetir diagnóstico" : "Hacer diagnóstico"}
             </button>
+            <button
+              type="button"
+              className="da-button da-button-ghost"
+              onClick={replayTour}
+            >
+              Ver guía de inicio
+            </button>
             <a className="da-button da-button-ghost" href={LANDING_URL}>
               Volver a la landing
             </a>
@@ -462,6 +494,9 @@ export default function DApp({
       />
       {screen}
       <BottomNav active={tab} onSelect={selectTab} />
+      {showTour && route.name === "dashboard" && (
+        <OnboardingTour onFinish={finishTour} />
+      )}
     </div>
   );
 }

@@ -22,6 +22,13 @@ import { isDAppPath, parseRoute, routeToHash } from "./routes";
 import { buildMonthGrid, combineDateTime, isSelectableDay } from "./scheduling";
 import BookingView from "./screens/BookingView";
 import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
+import OnboardingTour from "./screens/OnboardingTour";
+import {
+  hasSeenOnboarding,
+  markOnboardingSeen,
+  resetOnboarding,
+  TOUR_STEPS,
+} from "./onboarding";
 import {
   type Answers,
   buildResult,
@@ -646,5 +653,43 @@ describe("diagnostic", () => {
       screen.getByRole("button", { name: /Ver módulo recomendado/ }),
     );
     expect(onOpenModule).toHaveBeenCalledWith(RECOMMENDED_MODULE_ID);
+  });
+});
+
+describe("onboarding tour", () => {
+  it("steps through the tooltips and remembers completion per wallet", async () => {
+    window.localStorage.clear();
+    expect(hasSeenOnboarding(USER)).toBe(false);
+    const onFinish = vi.fn();
+    render(
+      <>
+        <WalletCard wallet={walletState()} />
+        <OnboardingTour onFinish={onFinish} />
+      </>,
+    );
+    const dialog = screen.getByRole("dialog", { name: /Guía de inicio/ });
+    expect(dialog).toHaveTextContent(TOUR_STEPS[0].title);
+    expect(dialog).toHaveTextContent(`1 / ${TOUR_STEPS.length}`);
+    await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    expect(dialog).toHaveTextContent(TOUR_STEPS[1].title);
+    await userEvent.click(screen.getByRole("button", { name: "Anterior" }));
+    expect(dialog).toHaveTextContent(TOUR_STEPS[0].title);
+    for (let i = 1; i < TOUR_STEPS.length; i++)
+      await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await userEvent.click(screen.getByRole("button", { name: /Listo/ }));
+    expect(onFinish).toHaveBeenCalledOnce();
+
+    markOnboardingSeen(USER);
+    expect(hasSeenOnboarding(USER)).toBe(true);
+    expect(hasSeenOnboarding("GOTHER")).toBe(false);
+    resetOnboarding(USER);
+    expect(hasSeenOnboarding(USER)).toBe(false);
+  });
+
+  it("can be dismissed with Omitir", async () => {
+    const onFinish = vi.fn();
+    render(<OnboardingTour onFinish={onFinish} />);
+    await userEvent.click(screen.getByRole("button", { name: "Omitir" }));
+    expect(onFinish).toHaveBeenCalledOnce();
   });
 });

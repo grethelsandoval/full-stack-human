@@ -1537,3 +1537,69 @@
 .da-recommend h2 {
   margin: 0.6rem 0 0.4rem;
 }
+
+/* Onboarding tour */
+.da-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.da-tour-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 8, 20, 0.55);
+  pointer-events: auto;
+}
+.da-tour-spot {
+  position: fixed;
+  pointer-events: auto;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 2px var(--da-primary-strong),
+    0 0 0 9999px rgba(4, 8, 20, 0.55);
+  background: transparent;
+  transition:
+    top 0.25s,
+    left 0.25s,
+    width 0.25s,
+    height 0.25s;
+}
+.da-tour-tip {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 380px);
+  margin-left: 0;
+  background: var(--da-surface);
+  border: 1px solid var(--da-border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  animation: da-fade 0.3s ease;
+}
+.da-tour-tip.above {
+  transform: translate(-50%, -100%);
+}
+.da-tour-tip header,
+.da-tour-tip footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.da-tour-tip footer div {
+  display: flex;
+  gap: 0.5rem;
+}
+.da-tour-tip h3 {
+  margin: 0.4rem 0 0.3rem;
+  font-size: 1.05rem;
+}
+.da-tour-tip p {
+  margin: 0 0 0.9rem;
+  color: var(--da-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}

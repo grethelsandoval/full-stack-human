@@ -202,6 +202,7 @@ export default function Dashboard({
         className="da-section"
         id="catalogo"
         aria-labelledby="catalogo-title"
+        data-tour="catalog"
       >
         <div className="da-section-head">
           <h2 id="catalogo-title">Catálogo de Módulos MVP</h2>

@@ -18,6 +18,7 @@ export default function WalletCard({
     <section
       className={`da-card da-wallet ${compact ? "compact" : ""}`}
       aria-labelledby="wallet-title"
+      data-tour="wallet"
     >
       <header className="da-wallet-head">
         {wallet.email && (
@@ -37,7 +38,7 @@ export default function WalletCard({
         </div>
       </header>
 
-      <dl className="da-balances">
+      <dl className="da-balances" data-tour="balances">
         <div>
           <dt>USDC (Circle Testnet)</dt>
           <dd data-testid="usdc-balance">
@@ -64,7 +65,7 @@ export default function WalletCard({
         </div>
       </dl>
 
-      <div className="da-wallet-actions">
+      <div className="da-wallet-actions" data-tour="faucets">
         <button
           type="button"
           className="da-button da-button-ghost"
