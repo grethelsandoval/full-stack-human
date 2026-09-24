@@ -91,3 +91,11 @@ export function formatSession(iso: string, timezone: string) {
 export function sessionHasPassed(booking: Booking, now = new Date()) {
   return new Date(booking.sessionAt).getTime() <= now.getTime();
 }
+
+export function completedBookings(bookings: Booking[]) {
+  return bookings.filter((booking) => booking.status === "released");
+}
+
+export function certificateId(booking: Booking) {
+  return `ACTA-${booking.moduleId}-${booking.contractId.slice(-6)}`;
+}

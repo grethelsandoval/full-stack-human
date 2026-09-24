@@ -264,7 +264,7 @@ export default function Schedule({
           <div>
             <dt>
               <strong>{module.shortTitle}</strong>
-              <small>{module.sessions} Sesiones guiadas + Roadmap</small>
+              <small>{module.sessions} Sesión guiada + Credencial</small>
             </dt>
             <dd>
               <code>${SESSION_PRICE_USD}.00 USD</code>

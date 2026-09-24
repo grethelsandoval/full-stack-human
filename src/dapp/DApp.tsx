@@ -23,6 +23,7 @@ import {
 } from "./onboarding";
 import { parseRoute, type Route, routeToHash } from "./routes";
 import BookingView, { type ReleaseState } from "./screens/BookingView";
+import Certificates from "./screens/Certificates";
 import Dashboard, { type UserMode } from "./screens/Dashboard";
 import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
 import Login from "./screens/Login";
@@ -391,6 +392,7 @@ export default function DApp({
         onBack={() => navigate({ name: "dashboard" })}
         onApprove={() => void handleApprove(booking)}
         onRelease={() => void handleRelease(booking)}
+        onCertificates={() => navigate({ name: "certificados" })}
         onRefresh={() => void refreshOnchain(booking.contractId)}
         onFund={() => void handleFundExisting(booking)}
       />
@@ -410,11 +412,15 @@ export default function DApp({
           </span>
           <h1>Certificados On-Chain</h1>
           <p>
-            Al completar las {5} sesiones de un módulo, tu credencial
-            verificable se emitirá como contrato Soroban en {NETWORK_LABEL}.
-            Todavía no tienes módulos completados.
+            Completa la sesión de un módulo y libera su escrow para obtener tu
+            credencial verificable en {NETWORK_LABEL}.
           </p>
         </section>
+        <Certificates
+          bookings={bookings}
+          onOpenBooking={(id) => navigate({ name: "booking", id })}
+          onOpenCatalog={() => navigate({ name: "dashboard" })}
+        />
       </main>
     );
   } else if (route.name === "perfil") {

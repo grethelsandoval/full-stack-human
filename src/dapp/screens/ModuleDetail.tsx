@@ -50,7 +50,7 @@ export default function ModuleDetail({
             Dominio BESSI: {module.domain}
           </span>
           <span className="da-tag blue">
-            <Clock3 size={12} /> {module.sessions} Sesiones (45 min)
+            <Clock3 size={12} /> {module.sessions} Sesión intensiva (45 min)
           </span>
           <span className="da-tag mint">
             <Radio size={12} /> 1 a 1 en vivo
@@ -96,8 +96,8 @@ export default function ModuleDetail({
           <span className="da-mono mint">{module.phases.length} Fases</span>
         </div>
         <p className="da-muted">
-          {module.sessions} Sesiones personalizadas 1 a 1 guiadas por datos
-          psicométricos e hitos ejecutables:
+          Una sesión intensiva 1 a 1 guiada por datos psicométricos, que recorre
+          estos bloques:
         </p>
         <ol className="da-phases">
           {module.phases.map((phase, index) => (
@@ -119,9 +119,8 @@ export default function ModuleDetail({
           ))}
         </ol>
         <p className="da-footnote">
-          *La duración estándar es de {module.sessions} sesiones. Módulos
-          avanzados pueden incluir sesiones adicionales según los requerimientos
-          de la habilidad.
+          *En este MVP cada módulo consta de {module.sessions} sesión. Al
+          confirmarla y liberar el escrow obtienes tu credencial del módulo.
         </p>
       </section>
 

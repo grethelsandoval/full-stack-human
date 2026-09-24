@@ -32,10 +32,10 @@ export const trainer = {
 };
 
 const finalPhase: TrainingPhase = {
-  title: "Evaluación y Credencial ACTA",
+  title: "Cierre y Credencial ACTA",
   duration: "Blockchain",
   description:
-    "Revisión final de competencia demostrada y emisión on-chain del certificado verificable en Stellar.",
+    "Al confirmar la sesión se libera el escrow y se emite tu credencial verificable en Stellar.",
 };
 
 export const catalog: TrainingModule[] = [
@@ -49,7 +49,7 @@ export const catalog: TrainingModule[] = [
     summary:
       "Estructura narrativa, modulación y persuasión. Aprende a comunicar ideas complejas de forma sintética ante inversores o equipos.",
     weeks: "2 semanas",
-    sessions: 5,
+    sessions: 1,
     outcomes: [
       {
         title: "Narrativa que Convence",
@@ -75,25 +75,25 @@ export const catalog: TrainingModule[] = [
     phases: [
       {
         title: "Diagnóstico de Estilo Comunicativo",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Evaluación Big Five + BESSI orientada a identificar tus fortalezas expresivas y puntos de fricción al presentar.",
       },
       {
         title: "Arquitectura del Pitch",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Plantillas narrativas para traducir arquitectura técnica en una historia clara para inversores y equipos.",
       },
       {
         title: "Modulación y Presencia",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Entrenamiento vocal y corporal con feedback grabado para proyectar confianza y entusiasmo.",
       },
       {
         title: "Simulación con Objeciones",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Ronda de preguntas difíciles en formato demo day para practicar respuestas sintéticas bajo presión.",
       },
@@ -110,7 +110,7 @@ export const catalog: TrainingModule[] = [
     summary:
       "Foco bajo presión, biofeedback y compostura ejecutiva. Diseñado para momentos de alta incertidumbre en entornos descentralizados.",
     weeks: "2 semanas",
-    sessions: 5,
+    sessions: 1,
     outcomes: [
       {
         title: "Lectura de Señales",
@@ -136,25 +136,25 @@ export const catalog: TrainingModule[] = [
     phases: [
       {
         title: "Diagnóstico de Estrés y Recuperación",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Evaluación Big Five + BESSI centrada en tolerancia al estrés, recuperación y patrones de sobrecarga.",
       },
       {
         title: "Herramientas de Regulación",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Técnicas de biofeedback, respiración y reencuadre cognitivo para momentos de alta incertidumbre.",
       },
       {
         title: "Compostura Ejecutiva",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Toma de decisiones bajo presión con simulaciones de incidentes y deadlines críticos.",
       },
       {
         title: "Rutinas Sostenibles",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Diseño de límites, descansos y rituales de recuperación compatibles con tu flujo de trabajo.",
       },
@@ -171,7 +171,7 @@ export const catalog: TrainingModule[] = [
     summary:
       "Alinea tu psicología conductual con la entrega ágil de software y sprints de alto impacto. Descomposición de metas y persistencia adaptativa.",
     weeks: "2 semanas",
-    sessions: 5,
+    sessions: 1,
     outcomes: [
       {
         title: "De la Idea al Roadmap",
@@ -197,25 +197,25 @@ export const catalog: TrainingModule[] = [
     phases: [
       {
         title: "Diagnóstico de Estilo de Regulación",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Evaluación Big Five + BESSI orientada a resolver patrones de fricción individual y calibración de objetivos.",
       },
       {
         title: "Operacionalización de Metas",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Descomposición de metas en hitos técnicos claros mediante plantillas de ingeniería de comportamiento.",
       },
       {
         title: "Monitoreo de Progreso Activo",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Detección temprana de desviaciones emocionales y técnicas frente a la presión de entrega continua.",
       },
       {
         title: "Persistencia y Pivotes Tácticos",
-        duration: "45m",
+        duration: "~10m",
         description:
           "Matriz de decisión para validar refactorización de objetivos frente a fricciones del mercado o la arquitectura.",
       },

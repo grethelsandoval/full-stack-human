@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import App from "../App";
 import {
   advanceBooking,
+  certificateId,
   type Booking,
   loadBookings,
   saveBooking,
@@ -21,6 +22,7 @@ import { buildEscrowPayload, ESCROW_TYPE } from "./escrow";
 import { isDAppPath, parseRoute, routeToHash } from "./routes";
 import { buildMonthGrid, combineDateTime, isSelectableDay } from "./scheduling";
 import BookingView from "./screens/BookingView";
+import Certificates from "./screens/Certificates";
 import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
 import OnboardingTour from "./screens/OnboardingTour";
 import {
@@ -536,6 +538,7 @@ describe("escrow", () => {
 
     const onApprove = vi.fn();
     const onRelease = vi.fn();
+    const onCertificates = vi.fn();
     const props = {
       module: catalog[0],
       onchain: null,
@@ -544,6 +547,7 @@ describe("escrow", () => {
       onFund: vi.fn(),
       onApprove,
       onRelease,
+      onCertificates,
       onRefresh: vi.fn(),
     };
     const { rerender } = render(
@@ -584,6 +588,55 @@ describe("escrow", () => {
     );
     expect(screen.queryByRole("button", { name: /Liberar/ })).toBeNull();
     expect(screen.getAllByText(/liberado/i).length).toBeGreaterThan(0);
+    await userEvent.click(
+      screen.getByRole("button", { name: /Ver mi certificado/ }),
+    );
+    expect(onCertificates).toHaveBeenCalledOnce();
+  });
+});
+
+describe("certificates", () => {
+  it("every module is a single session", () => {
+    expect(catalog.every((module) => module.sessions === 1)).toBe(true);
+  });
+
+  it("issues a certificate only for released bookings", async () => {
+    const onOpenBooking = vi.fn();
+    const onOpenCatalog = vi.fn();
+    const { rerender } = render(
+      <Certificates
+        bookings={[booking({ status: "funded" })]}
+        onOpenBooking={onOpenBooking}
+        onOpenCatalog={onOpenCatalog}
+      />,
+    );
+    expect(screen.queryByTestId("certificate")).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Ver catálogo" }));
+    expect(onOpenCatalog).toHaveBeenCalledOnce();
+
+    const released = booking({
+      id: "b-done",
+      status: "released",
+      txHashes: { release: "h-release" },
+    });
+    rerender(
+      <Certificates
+        bookings={[released]}
+        onOpenBooking={onOpenBooking}
+        onOpenCatalog={onOpenCatalog}
+      />,
+    );
+    const cert = screen.getByTestId("certificate");
+    expect(cert).toHaveTextContent(catalog[0].title);
+    expect(cert).toHaveTextContent(certificateId(released));
+    expect(
+      screen.getByRole("link", { name: /Tx de liberación/ }),
+    ).toHaveAttribute(
+      "href",
+      "https://stellar.expert/explorer/testnet/tx/h-release",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Ver reserva" }));
+    expect(onOpenBooking).toHaveBeenCalledWith("b-done");
   });
 });
 

@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  Award,
   BadgeCheck,
   CalendarDays,
   Check,
@@ -62,6 +63,7 @@ export default function BookingView({
   onFund,
   onApprove,
   onRelease,
+  onCertificates,
   onRefresh,
   now = new Date(),
 }: {
@@ -73,6 +75,7 @@ export default function BookingView({
   onFund: () => void;
   onApprove: () => void;
   onRelease: () => void;
+  onCertificates: () => void;
   onRefresh: () => void;
   now?: Date;
 }) {
@@ -203,6 +206,25 @@ export default function BookingView({
           </dl>
         )}
       </section>
+
+      {booking.status === "released" && (
+        <section className="da-card da-release" aria-labelledby="cert-title">
+          <h2 id="cert-title" className="da-h2-icon">
+            <Award size={20} className="mint" /> Credencial disponible
+          </h2>
+          <p className="da-muted">
+            Completaste la sesión del módulo y el escrow fue liquidado. Tu
+            credencial del módulo ya está en Certificados.
+          </p>
+          <button
+            type="button"
+            className="da-button da-button-gradient"
+            onClick={onCertificates}
+          >
+            <Award size={16} /> Ver mi certificado
+          </button>
+        </section>
+      )}
 
       {booking.status !== "released" && (
         <section className="da-card da-release" aria-labelledby="liberar-title">

@@ -1603,3 +1603,59 @@
   font-size: 0.9rem;
   line-height: 1.45;
 }
+
+/* Certificates */
+.da-cert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.da-cert {
+  border-color: rgba(16, 185, 129, 0.45);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(16, 185, 129, 0.12),
+      transparent 55%
+    ),
+    var(--da-surface);
+}
+.da-cert header,
+.da-cert footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.da-cert-body {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin: 1rem 0;
+}
+.da-cert-body p {
+  margin: 0.15rem 0;
+}
+.da-cert-seal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: #10b981;
+  border: 2px solid rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.25);
+}
+.da-cert-kicker {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--da-muted);
+}
+.da-cert-holder {
+  font-size: 1.05rem;
+}
