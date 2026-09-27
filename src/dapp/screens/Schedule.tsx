@@ -1,102 +1,81 @@
+import { useMemo, useState, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import { type Psychologist, timeSlots } from "../catalog";
+import { SESSION_MINUTES } from "../config";
 import {
-  ArrowLeft,
-  BadgeCheck,
-  BrainCircuit,
-  CalendarCheck2,
-  CalendarDays,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  CreditCard,
-  Globe2,
-  LockKeyhole,
-  LockOpen,
-  ShieldCheck,
-  Wallet,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { timeSlots, trainer, type TrainingModule } from "../catalog";
-import { SESSION_PRICE_USD } from "../config";
-import {
+  browserTimezone,
   buildMonthGrid,
   combineDateTime,
   isSelectableDay,
+  offsetLabel,
 } from "../scheduling";
-import { hasEnoughUsdc } from "../stellar";
-import { Notice, Spinner } from "../ui";
-import type { WalletState } from "../useWallet";
-import WalletCard from "./WalletCard";
+import { Avatar, Label, TopBar } from "../ui";
 
-export type PayStep = "idle" | "deploy" | "fund" | "done";
+const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
 
-export interface PayState {
-  step: PayStep;
-  error: string | null;
+function monthTitle(year: number, month: number) {
+  const text = new Intl.DateTimeFormat("es-ES", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, month, 1));
+  return text.replace(" de ", " ").replace(/^\p{L}/u, (c) => c.toUpperCase());
 }
 
-const WEEKDAYS = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
-const MONTHS = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-];
+/** El calendario abre en el mes del primer día agendable. */
+function firstSelectableDay(now: Date) {
+  const day = new Date(now);
+  for (let i = 0; i < 10; i++) {
+    day.setDate(day.getDate() + 1);
+    if (isSelectableDay(day, now)) return new Date(day);
+  }
+  return new Date(now);
+}
 
-const PAY_LABELS: Record<PayStep, string> = {
-  idle: `Pagar $${SESSION_PRICE_USD}.00 USD y Confirmar`,
-  deploy: "Firma 1/2 · Creando escrow en Soroban…",
-  fund: "Firma 2/2 · Depositando USDC en el escrow…",
-  done: "¡Escrow Iniciado!",
-};
+function dayTitle(day: Date) {
+  const text = new Intl.DateTimeFormat("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(day);
+  return text.replace(/^\p{L}/u, (c) => c.toUpperCase());
+}
 
 export default function Schedule({
-  module,
-  wallet,
-  pay,
+  title,
+  step,
+  psychologist,
+  ctaLabel,
+  busy = false,
+  notice,
   onBack,
-  onPay,
+  onConfirm,
   now = new Date(),
 }: {
-  module: TrainingModule;
-  wallet: WalletState;
-  pay: PayState;
+  title: string;
+  step?: string;
+  psychologist: Psychologist;
+  ctaLabel: string;
+  busy?: boolean;
+  notice?: ReactNode;
   onBack: () => void;
-  onPay: (sessionAt: Date, timezone: string) => void;
+  onConfirm: (sessionAt: Date, timezone: string) => void;
   now?: Date;
 }) {
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const [view, setView] = useState({
-    year: now.getFullYear(),
-    month: now.getMonth(),
+  const timezone = browserTimezone();
+  const [view, setView] = useState(() => {
+    const first = firstSelectableDay(now);
+    return { year: first.getFullYear(), month: first.getMonth() };
   });
   const [day, setDay] = useState<Date | null>(null);
   const [slot, setSlot] = useState<number | null>(null);
-  const [method, setMethod] = useState<"wallet" | "fiat">("wallet");
 
   const cells = useMemo(
     () => buildMonthGrid(view.year, view.month),
     [view.year, view.month],
   );
-  const chosen = timeSlots[slot ?? -1];
+  const chosen = slot === null ? null : timeSlots[slot];
   const sessionAt =
     day && chosen ? combineDateTime(day, chosen.hour, chosen.minute) : null;
-  const enough = hasEnoughUsdc(wallet.balances, SESSION_PRICE_USD);
-  const busy = pay.step === "deploy" || pay.step === "fund";
-  const canPay =
-    sessionAt !== null &&
-    method === "wallet" &&
-    enough &&
-    !busy &&
-    pay.step !== "done";
 
   function shiftMonth(delta: number) {
     setView((current) => {
@@ -105,286 +84,116 @@ export default function Schedule({
     });
   }
 
-  const dayLabel = day
-    ? new Intl.DateTimeFormat("es-ES", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      })
-        .format(day)
-        .replace(/\./g, "")
-    : null;
-
   return (
-    <main className="da-main">
-      <div className="da-breadcrumb">
-        <button type="button" className="da-back" onClick={onBack}>
-          <ArrowLeft size={16} /> Volver al Detalle del Módulo
-        </button>
-      </div>
-
-      <ol className="da-progress" aria-label="Progreso de la reserva">
-        <li className="done">
-          <span>
-            <Check size={14} />
-          </span>
-          1. Módulo
-        </li>
-        <li className="current">
-          <span>2</span>Agendar &amp; Pagar
-        </li>
-        <li className={pay.step === "done" ? "done" : ""}>
-          <span>{pay.step === "done" ? <Check size={14} /> : 3}</span>
-          Confirmado
-        </li>
-      </ol>
-
-      <section className="da-card da-session">
-        <span className="da-trainer-avatar" aria-hidden="true">
-          MA
-          <Check size={12} />
-        </span>
-        <div>
-          <span className="da-tag violet">
-            <BrainCircuit size={12} /> Sesión 1 Diagnóstica (45 min)
-          </span>
-          <h1>Diagnóstico Conductual</h1>
-          <p>{module.title}</p>
-          <small className="mint">
-            <span className="da-dot" aria-hidden="true" /> 1 a 1 en vivo por
-            Google Meet / Huddle
-          </small>
-        </div>
-      </section>
-
-      <section className="da-card" aria-labelledby="fecha-title">
-        <div className="da-section-head da-tz">
-          <span>
-            <Globe2 size={16} /> <strong>{timezone}</strong>
-            <small>(Detectado en tu navegador)</small>
-          </span>
-        </div>
-        <div className="da-calendar-head">
-          <h2 id="fecha-title" className="da-h2-icon">
-            <CalendarDays size={20} className="blue" /> {MONTHS[view.month]}{" "}
-            {view.year}
-          </h2>
-          <div>
-            <button
-              type="button"
-              className="da-icon-button"
-              aria-label="Mes anterior"
-              onClick={() => shiftMonth(-1)}
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              type="button"
-              className="da-icon-button"
-              aria-label="Mes siguiente"
-              onClick={() => shiftMonth(1)}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-        <div className="da-calendar" role="grid" aria-label="Calendario">
-          {WEEKDAYS.map((label) => (
-            <span key={label} className="da-weekday" role="columnheader">
-              {label}
+    <main className="fa-main">
+      <TopBar title={title} step={step} onBack={onBack} />
+      <div className="fa-flow">
+        <div className="fa-flow-body">
+          {notice}
+          <p className="fa-row fa-sm fa-gap-10">
+            <Avatar initials={psychologist.initials} size={36} />
+            <span>
+              Con <b>{psychologist.name}</b> · {SESSION_MINUTES} min · Meet
             </span>
-          ))}
-          {cells.map((cell) => {
-            const selectable = isSelectableDay(cell, now);
-            const inMonth = cell.getMonth() === view.month;
-            const selected = day?.toDateString() === cell.toDateString();
-            return (
+          </p>
+
+          <div className="fa-row fa-between fa-mt-20">
+            <h2 className="fa-h3" id="fa-month">
+              {monthTitle(view.year, view.month)}
+            </h2>
+            <div className="fa-row fa-gap-0">
               <button
-                key={cell.toISOString()}
                 type="button"
-                role="gridcell"
-                className={`da-day ${inMonth ? "" : "muted"} ${
-                  selectable ? "available" : ""
-                } ${selected ? "selected" : ""}`}
-                disabled={!selectable}
-                aria-pressed={selected}
-                aria-label={new Intl.DateTimeFormat("es-ES", {
-                  dateStyle: "full",
-                }).format(cell)}
-                onClick={() => {
-                  setDay(cell);
-                  setSlot(null);
-                }}
+                className="fa-iconbtn"
+                aria-label="Mes anterior"
+                onClick={() => shiftMonth(-1)}
               >
-                {cell.getDate()}
+                <ChevronLeft size={22} />
               </button>
-            );
-          })}
-        </div>
+              <button
+                type="button"
+                className="fa-iconbtn"
+                aria-label="Mes siguiente"
+                onClick={() => shiftMonth(1)}
+              >
+                <ChevronRight size={22} />
+              </button>
+            </div>
+          </div>
+          <div
+            className="fa-cal fa-mt-8"
+            role="grid"
+            aria-labelledby="fa-month"
+          >
+            {WEEKDAYS.map((label, index) => (
+              <span key={index} className="fa-cal-w" role="columnheader">
+                {label}
+              </span>
+            ))}
+            {cells.map((cell) => {
+              const inMonth = cell.getMonth() === view.month;
+              if (!inMonth) return <span key={cell.toISOString()} />;
+              const selectable = isSelectableDay(cell, now);
+              const selected = day?.toDateString() === cell.toDateString();
+              return (
+                <button
+                  key={cell.toISOString()}
+                  type="button"
+                  role="gridcell"
+                  className={`fa-cal-d ${selectable ? "is-av" : ""} ${
+                    selected ? "is-sel" : ""
+                  }`}
+                  disabled={!selectable}
+                  aria-pressed={selected}
+                  aria-label={new Intl.DateTimeFormat("es-ES", {
+                    dateStyle: "full",
+                  }).format(cell)}
+                  onClick={() => {
+                    setDay(cell);
+                    setSlot(null);
+                  }}
+                >
+                  {cell.getDate()}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="da-section-head">
-          <h3 className="da-h2-icon">
-            <Clock3 size={16} /> Horarios disponibles:{" "}
-            <span className="blue">{dayLabel ?? "elige un día"}</span>
-          </h3>
-          <span className="da-mono mint">
-            {timeSlots.filter((s) => s.available).length} vacantes
-          </span>
+          <Label as="h2">
+            <span className="fa-block fa-mt-20">
+              {day ? dayTitle(day) : "Elige un día"}
+            </span>
+          </Label>
+          <div className="fa-slots fa-mt-12" role="group" aria-label="Horarios">
+            {timeSlots.map((time, index) => (
+              <button
+                key={time.label}
+                type="button"
+                className={`fa-slot ${slot === index ? "is-sel" : ""}`}
+                disabled={!day}
+                aria-pressed={slot === index}
+                onClick={() => setSlot(index)}
+              >
+                {time.label}
+              </button>
+            ))}
+          </div>
+          <p className="fa-xs fa-muted fa-row fa-gap-6 fa-mt-12">
+            <Globe size={16} aria-hidden="true" /> Horario de tu zona:{" "}
+            {timezone} ({offsetLabel(sessionAt ?? now, timezone)})
+          </p>
         </div>
-        <div className="da-slots">
-          {timeSlots.map((time, index) => (
-            <button
-              key={time.label}
-              type="button"
-              className={`da-slot ${slot === index ? "selected" : ""}`}
-              disabled={!day || !time.available}
-              aria-pressed={slot === index}
-              onClick={() => setSlot(index)}
-            >
-              {slot === index && <Check size={14} />}
-              {time.label}
-            </button>
-          ))}
-        </div>
-        <p className="da-sync">
-          <CalendarCheck2 size={16} />
-          <span>
-            Se sincronizará en tu <strong>Google Calendar</strong> y recibirás
-            credenciales de acceso instantáneas tras la firma del contrato.
-          </span>
-        </p>
-      </section>
-
-      <section className="da-card da-summary" aria-labelledby="resumen-title">
-        <div className="da-section-head">
-          <h2 id="resumen-title">Resumen de Reserva</h2>
-          <span className="da-mono mint">{module.id}</span>
-        </div>
-        <dl className="da-kv">
-          <div>
-            <dt>
-              <strong>{module.shortTitle}</strong>
-              <small>{module.sessions} Sesión guiada + Credencial</small>
-            </dt>
-            <dd>
-              <code>${SESSION_PRICE_USD}.00 USD</code>
-            </dd>
-          </div>
-          <div>
-            <dt>
-              <CalendarDays size={14} /> Sesión 1 Agendada
-            </dt>
-            <dd data-testid="session-summary">
-              <code>
-                {sessionAt
-                  ? `${dayLabel}, ${chosen.label}`
-                  : "Selecciona fecha y hora"}
-              </code>
-            </dd>
-          </div>
-          <div>
-            <dt>
-              <BadgeCheck size={14} /> Especialista
-            </dt>
-            <dd>{trainer.name}</dd>
-          </div>
-          <div>
-            <dt>Equivalencia en Ledger</dt>
-            <dd>
-              <code className="mint">
-                {SESSION_PRICE_USD}.00 USDC (Stellar)
-              </code>
-            </dd>
-          </div>
-        </dl>
-        <div className="da-total">
-          <div>
-            <small className="da-mono">TOTAL A PAGAR</small>
-            <p className="da-amount">
-              ${SESSION_PRICE_USD}.00 <small>USD</small>
-            </p>
-          </div>
-          <span className="da-tag mint">
-            <ShieldCheck size={12} /> Garantía Soroban
-          </span>
-        </div>
-      </section>
-
-      <WalletCard wallet={wallet} compact />
-
-      <section className="da-card da-pay" aria-labelledby="pago-title">
-        <h2 id="pago-title" className="da-visually-hidden">
-          Método de pago
-        </h2>
-        <div
-          className="da-segmented"
-          role="tablist"
-          aria-label="Método de pago"
-        >
+        <div className="fa-cta">
           <button
             type="button"
-            role="tab"
-            aria-selected={method === "wallet"}
-            className={method === "wallet" ? "active" : ""}
-            onClick={() => setMethod("wallet")}
+            className="fa-btn fa-btn--primary"
+            disabled={!sessionAt || busy}
+            onClick={() => sessionAt && onConfirm(sessionAt, timezone)}
           >
-            <Wallet size={16} /> Wallet Pollar (USDC)
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === "fiat"}
-            className={method === "fiat" ? "active" : ""}
-            onClick={() => setMethod("fiat")}
-          >
-            <CreditCard size={16} /> Rampa Fiat / Tarjeta
+            {ctaLabel}
           </button>
         </div>
-        {method === "fiat" && (
-          <Notice>
-            La pasarela integrada Pollar (tarjeta / Apple Pay → USDC) llegará en
-            la siguiente fase. En testnet, paga con USDC de prueba (Circle).
-          </Notice>
-        )}
-        {method === "wallet" && !enough && (
-          <Notice tone="error" role="alert">
-            Necesitas al menos {SESSION_PRICE_USD} USDC de prueba. Usa el botón
-            «Obtener USDC de prueba» y vuelve a intentar.
-          </Notice>
-        )}
-
-        <p className="da-escrow-note">
-          <LockOpen size={16} className="mint" />
-          <span>
-            <strong className="mint">Soroban Escrow Seguro</strong>{" "}
-            <code>trustless_work_single_release</code>
-            <br />
-            Tus fondos quedan custodiados por el contrato inteligente y se
-            liberan a la entrenadora <strong>únicamente después</strong> de
-            finalizar y firmar la Sesión 1.
-          </span>
-        </p>
-
-        {pay.error && (
-          <Notice tone="error" role="alert">
-            {pay.error}
-          </Notice>
-        )}
-
-        <button
-          type="button"
-          className="da-button da-button-gradient"
-          disabled={!canPay}
-          onClick={() => sessionAt && onPay(sessionAt, timezone)}
-        >
-          {busy ? <Spinner /> : <LockKeyhole size={18} />}
-          {PAY_LABELS[pay.step]}
-        </button>
-        <p className="da-footnote center">
-          <ShieldCheck size={12} /> Cancelación o reprogramación flexible y
-          gratuita hasta 24h antes.
-        </p>
-      </section>
+      </div>
     </main>
   );
 }

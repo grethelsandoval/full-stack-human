@@ -1,238 +1,159 @@
-export interface TrainingPhase {
-  title: string;
-  duration: string;
+/** Las cinco capas FSH, cada una con su dominio BESSI y su color de marca. */
+export type Layer = "runtime" | "api" | "merge" | "firewall" | "fork";
+
+export interface LayerInfo {
+  id: Layer;
+  name: string;
+  domain: string;
+  /** Color del dominio (tokens --fsh-domain-*). */
+  color: string;
   description: string;
 }
 
-export interface Outcome {
-  title: string;
-  description: string;
+export const LAYERS: Record<Layer, LayerInfo> = {
+  runtime: {
+    id: "runtime",
+    name: "Runtime",
+    domain: "Autogestión",
+    color: "#22C8EE",
+    description:
+      "Relacionado con la autogestión: organización, gestión del tiempo, consistencia y regulación de la ejecución de tareas.",
+  },
+  api: {
+    id: "api",
+    name: "API",
+    domain: "Compromiso social",
+    color: "#FF6B3D",
+    description:
+      "Relacionado con el compromiso social: expresión, conversación, persuasión y capacidad de comunicar con otras personas.",
+  },
+  merge: {
+    id: "merge",
+    name: "Merge",
+    domain: "Cooperación",
+    color: "#3CF0B4",
+    description:
+      "Relacionado con la cooperación: perspectiva de otras personas, confianza, trabajo en equipo y coordinación.",
+  },
+  firewall: {
+    id: "firewall",
+    name: "Firewall",
+    domain: "Resiliencia emocional",
+    color: "#FFC857",
+    description:
+      "Relacionado con la regulación frente a presión: regulación del estrés, impulsos, frustración y confianza.",
+  },
+  fork: {
+    id: "fork",
+    name: "Fork",
+    domain: "Innovación",
+    color: "#B8F23A",
+    description:
+      "Relacionado con exploración y adaptación: generación de alternativas, procesamiento de información, creatividad y adaptación.",
+  },
+};
+
+export const LAYER_ORDER: Layer[] = [
+  "runtime",
+  "api",
+  "merge",
+  "firewall",
+  "fork",
+];
+
+/** "Firewall (Resiliencia emocional)": la capa siempre con su dominio. */
+export function layerLabel(layer: Layer) {
+  const info = LAYERS[layer];
+  return `${info.name} (${info.domain})`;
 }
+
+export interface Psychologist {
+  name: string;
+  initials: string;
+  role: string;
+  /** Sala de Meet de la psicóloga. Pendiente: generación automática al agendar. */
+  meetUrl?: string;
+}
+
+export type ModuleIcon = "meta" | "equipo" | "firewall";
 
 export interface TrainingModule {
   id: string;
-  code: string;
-  domain: string;
-  domainTone: "blue" | "violet" | "mint";
-  title: string;
-  shortTitle: string;
+  skill: string;
+  layer: Layer;
+  /** Definición operativa FSH (documento de evidencia auditada). */
+  definition: string;
   summary: string;
-  weeks: string;
-  sessions: number;
-  outcomes: Outcome[];
-  phases: TrainingPhase[];
+  icon: ModuleIcon;
+  psychologist: Psychologist;
 }
-
-export const trainer = {
-  name: "Lic. Madai Aramayo",
-  role: "Entrenadora de Habilidades Blandas",
-  faculty: "FSH Hub Core Faculty",
-  bio: "Psicóloga profesional especializada en desarrollo conductual y facilitación de habilidades socioemocionales, enfocada en la adaptación de metodologías científicas para profesionales del ecosistema tech.",
-  badges: ["Certificada FSH", "Big Five Assessor", "+140 Devs Evaluados"],
-};
-
-const finalPhase: TrainingPhase = {
-  title: "Cierre y Credencial ACTA",
-  duration: "Blockchain",
-  description:
-    "Al confirmar la sesión se libera el escrow y se emite tu credencial verificable en Stellar.",
-};
 
 export const catalog: TrainingModule[] = [
   {
-    id: "FSH-MOD-01",
-    code: "01",
-    domain: "Comunicación",
-    domainTone: "blue",
-    title: "Pitches de Alto Impacto",
-    shortTitle: "Módulo Pitches de Alto Impacto",
+    id: "regulacion-de-metas",
+    skill: "Regulación de metas",
+    layer: "runtime",
+    definition:
+      "Fijar objetivos realistas, evaluar avances y reajustar planes.",
     summary:
-      "Estructura narrativa, modulación y persuasión. Aprende a comunicar ideas complejas de forma sintética ante inversores o equipos.",
-    weeks: "2 semanas",
-    sessions: 1,
-    outcomes: [
-      {
-        title: "Narrativa que Convence",
-        description:
-          "Estructura un pitch de 3 minutos que conecta el problema, la solución y la tracción sin perder a la audiencia.",
-      },
-      {
-        title: "Presencia Vocal",
-        description:
-          "Modula ritmo, pausas y energía para proyectar confianza ante VCs, jurados de grants y comunidades.",
-      },
-      {
-        title: "Objeciones en Vivo",
-        description:
-          "Responde preguntas difíciles con argumentos sintéticos y sin perder la calma frente a inversores.",
-      },
-      {
-        title: "Estilo por Personalidad",
-        description:
-          "Adapta tu comunicación a tu perfil Big Five para persuadir desde tus fortalezas, sin actuar un personaje.",
-      },
-    ],
-    phases: [
-      {
-        title: "Diagnóstico de Estilo Comunicativo",
-        duration: "~10m",
-        description:
-          "Evaluación Big Five + BESSI orientada a identificar tus fortalezas expresivas y puntos de fricción al presentar.",
-      },
-      {
-        title: "Arquitectura del Pitch",
-        duration: "~10m",
-        description:
-          "Plantillas narrativas para traducir arquitectura técnica en una historia clara para inversores y equipos.",
-      },
-      {
-        title: "Modulación y Presencia",
-        duration: "~10m",
-        description:
-          "Entrenamiento vocal y corporal con feedback grabado para proyectar confianza y entusiasmo.",
-      },
-      {
-        title: "Simulación con Objeciones",
-        duration: "~10m",
-        description:
-          "Ronda de preguntas difíciles en formato demo day para practicar respuestas sintéticas bajo presión.",
-      },
-      finalPhase,
-    ],
+      "Aterriza objetivos grandes en metas realistas, revisa tu avance y reajusta el plan sin perder el rumbo.",
+    icon: "meta",
+    psychologist: {
+      name: "Madai Aramayo",
+      initials: "MA",
+      role: "Psicóloga · equipo FSH",
+    },
   },
   {
-    id: "FSH-MOD-02",
-    code: "02",
-    domain: "Autorregulación",
-    domainTone: "violet",
-    title: "Gestión del Estrés y Regulación Emocional",
-    shortTitle: "Módulo Regulación Emocional",
+    id: "trabajo-en-equipo",
+    skill: "Habilidad de trabajo en equipo",
+    layer: "merge",
+    definition: "Articular el esfuerzo propio hacia el objetivo común.",
     summary:
-      "Foco bajo presión, biofeedback y compostura ejecutiva. Diseñado para momentos de alta incertidumbre en entornos descentralizados.",
-    weeks: "2 semanas",
-    sessions: 1,
-    outcomes: [
-      {
-        title: "Lectura de Señales",
-        description:
-          "Detecta temprano las señales físicas y cognitivas del estrés antes de que afecten tus decisiones técnicas.",
-      },
-      {
-        title: "Regulación en Vivo",
-        description:
-          "Aplica técnicas de respiración y reencuadre cuando el deploy falla o el mercado se mueve en tu contra.",
-      },
-      {
-        title: "Límites Sostenibles",
-        description:
-          "Diseña rutinas de recuperación compatibles con hackathons, mainnets y equipos distribuidos.",
-      },
-      {
-        title: "Plan Anti-Burnout",
-        description:
-          "Construye un sistema personal de prevención alineado a tu perfil Big Five y a tu ritmo real de trabajo.",
-      },
-    ],
-    phases: [
-      {
-        title: "Diagnóstico de Estrés y Recuperación",
-        duration: "~10m",
-        description:
-          "Evaluación Big Five + BESSI centrada en tolerancia al estrés, recuperación y patrones de sobrecarga.",
-      },
-      {
-        title: "Herramientas de Regulación",
-        duration: "~10m",
-        description:
-          "Técnicas de biofeedback, respiración y reencuadre cognitivo para momentos de alta incertidumbre.",
-      },
-      {
-        title: "Compostura Ejecutiva",
-        duration: "~10m",
-        description:
-          "Toma de decisiones bajo presión con simulaciones de incidentes y deadlines críticos.",
-      },
-      {
-        title: "Rutinas Sostenibles",
-        duration: "~10m",
-        description:
-          "Diseño de límites, descansos y rituales de recuperación compatibles con tu flujo de trabajo.",
-      },
-      finalPhase,
-    ],
+      "Ajusta tu forma de trabajar para sumar al objetivo del equipo, también cuando el trabajo es remoto y async.",
+    icon: "equipo",
+    psychologist: {
+      name: "Yohana Condori",
+      initials: "YC",
+      role: "Psicóloga · equipo FSH",
+    },
   },
   {
-    id: "FSH-MOD-03",
-    code: "03",
-    domain: "Autorregulación",
-    domainTone: "mint",
-    title: "Regulación y Ejecución de Metas en Entornos Tech",
-    shortTitle: "Módulo Regulación de Metas",
+    id: "regulacion-de-la-confianza",
+    skill: "Regulación de la confianza",
+    layer: "firewall",
+    definition: "Sostener un sentido estable de autoeficacia.",
     summary:
-      "Alinea tu psicología conductual con la entrega ágil de software y sprints de alto impacto. Descomposición de metas y persistencia adaptativa.",
-    weeks: "2 semanas",
-    sessions: 1,
-    outcomes: [
-      {
-        title: "De la Idea al Roadmap",
-        description:
-          "Traduce objetivos complejos en sprints de trabajo diarios manejables sin abrumarte ni saturar tu memoria de trabajo.",
-      },
-      {
-        title: "Gestión de Bloqueos",
-        description:
-          "Adapta tu planificación ante cambios súbitos de requerimiento o scope creep sin perder la cadencia técnica.",
-      },
-      {
-        title: "Persistencia Adaptativa",
-        description:
-          "Aprende a diferenciar el foco obstinado del desgaste estéril: reconoce cuándo persistir y cuándo pivotar tácticamente.",
-      },
-      {
-        title: "Estrategia por Personalidad",
-        description:
-          "Diseña un sistema operativo personal de metas sincronizado a tu perfil Big Five, mitigando dispersión y perfeccionismo paralizante.",
-      },
-    ],
-    phases: [
-      {
-        title: "Diagnóstico de Estilo de Regulación",
-        duration: "~10m",
-        description:
-          "Evaluación Big Five + BESSI orientada a resolver patrones de fricción individual y calibración de objetivos.",
-      },
-      {
-        title: "Operacionalización de Metas",
-        duration: "~10m",
-        description:
-          "Descomposición de metas en hitos técnicos claros mediante plantillas de ingeniería de comportamiento.",
-      },
-      {
-        title: "Monitoreo de Progreso Activo",
-        duration: "~10m",
-        description:
-          "Detección temprana de desviaciones emocionales y técnicas frente a la presión de entrega continua.",
-      },
-      {
-        title: "Persistencia y Pivotes Tácticos",
-        duration: "~10m",
-        description:
-          "Matriz de decisión para validar refactorización de objetivos frente a fricciones del mercado o la arquitectura.",
-      },
-      finalPhase,
-    ],
+      "Confía en lo que sabes hacer, también cuando algo sale mal o te toca exponer.",
+    icon: "firewall",
+    psychologist: {
+      name: "Shirley Ali",
+      initials: "SA",
+      role: "Psicóloga · equipo FSH",
+    },
   },
 ];
 
+/** Capas con habilidades que el equipo de psicología aún está diseñando. */
+export const UPCOMING_LAYERS: { label: string; color: string }[] = [
+  { label: layerLabel("api"), color: LAYERS.api.color },
+  { label: layerLabel("fork"), color: LAYERS.fork.color },
+  { label: "Transversales", color: "#94A3BD" },
+];
+
 export const timeSlots = [
-  { label: "09:00 AM", hour: 9, minute: 0, available: true },
-  { label: "11:30 AM", hour: 11, minute: 30, available: true },
-  { label: "03:00 PM", hour: 15, minute: 0, available: true },
-  { label: "04:00 PM", hour: 16, minute: 0, available: true },
-  { label: "05:30 PM", hour: 17, minute: 30, available: true },
-  { label: "07:00 PM", hour: 19, minute: 0, available: false },
+  { label: "09:00", hour: 9, minute: 0 },
+  { label: "11:00", hour: 11, minute: 0 },
+  { label: "16:00", hour: 16, minute: 0 },
+  { label: "18:00", hour: 18, minute: 0 },
+  { label: "19:00", hour: 19, minute: 0 },
+  { label: "20:00", hour: 20, minute: 0 },
 ];
 
 export function findModule(id: string | null | undefined) {
   return catalog.find((module) => module.id === id) ?? null;
+}
+
+export function modulesInLayer(layer: Layer) {
+  return catalog.filter((module) => module.layer === layer);
 }

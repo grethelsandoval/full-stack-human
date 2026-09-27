@@ -6,7 +6,11 @@ import Login from "./screens/Login";
 
 export default function DAppRoot() {
   if (!env.pollarKey) {
-    return <Login configured={false} onLogin={() => undefined} />;
+    return (
+      <div className="fa-app">
+        <Login configured={false} onLogin={() => undefined} />
+      </div>
+    );
   }
   return (
     <PollarProvider client={{ apiKey: env.pollarKey, stellarNetwork: NETWORK }}>

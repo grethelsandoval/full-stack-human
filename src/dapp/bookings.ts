@@ -1,8 +1,28 @@
-export type BookingStatus = "created" | "funded" | "approved" | "released";
+import {
+  DEMO_MODE,
+  MEET_OPENS_MINUTES,
+  RESCHEDULE_NOTICE_HOURS,
+  SESSION_MINUTES,
+  SESSIONS_PER_MODULE,
+} from "./config";
+
+/**
+ * Cada sesión es un escrow single-release propio. Un módulo tiene
+ * SESSIONS_PER_MODULE sesiones; se agenda y paga una a la vez.
+ */
+export type BookingStatus =
+  | "created"
+  | "funded"
+  | "approved"
+  | "released"
+  | "disputed";
+
+export type TxKey = "deploy" | "fund" | "approve" | "release" | "dispute";
 
 export interface Booking {
   id: string;
   moduleId: string;
+  sessionNumber: number;
   wallet: string;
   contractId: string;
   engagementId: string;
@@ -10,31 +30,26 @@ export interface Booking {
   sessionAt: string;
   timezone: string;
   status: BookingStatus;
-  txHashes: Partial<Record<"deploy" | "fund" | "approve" | "release", string>>;
+  txHashes: Partial<Record<TxKey, string>>;
   createdAt: string;
 }
 
-const STORAGE_KEY = "fsh-hub:bookings:v1";
-
-export const STATUS_LABELS: Record<BookingStatus, string> = {
-  created: "Escrow creado · pendiente de pago",
-  funded: "Pagado · fondos en escrow",
-  approved: "Sesión confirmada · listo para liberar",
-  released: "Pago liberado a la entrenadora",
-};
+const STORAGE_KEY = "fsh-hub:bookings:v2";
 
 export const NEXT_STATUS: Record<BookingStatus, BookingStatus | null> = {
   created: "funded",
   funded: "approved",
   approved: "released",
   released: null,
+  disputed: null,
 };
 
-const TX_KEYS: Record<BookingStatus, keyof Booking["txHashes"]> = {
+const TX_KEYS: Record<BookingStatus, TxKey> = {
   created: "deploy",
   funded: "fund",
   approved: "approve",
   released: "release",
+  disputed: "dispute",
 };
 
 function readStorage(): Booking[] {
@@ -55,7 +70,11 @@ export function loadBookings(wallet: string): Booking[] {
 export function saveBooking(booking: Booking): Booking[] {
   const others = readStorage().filter((item) => item.id !== booking.id);
   const next = [booking, ...others];
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* storage unavailable: the booking lives only for this visit */
+  }
   return next.filter((item) => item.wallet === booking.wallet);
 }
 
@@ -73,29 +92,97 @@ export function advanceBooking(
   };
 }
 
-export function formatSession(iso: string, timezone: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const formatted = new Intl.DateTimeFormat("es-ES", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: timezone,
-  }).format(date);
-  return formatted.replace(/\./g, "").replace(/^\w/, (c) => c.toUpperCase());
+export function markDisputed(
+  booking: Booking,
+  hash: string | undefined,
+): Booking {
+  return {
+    ...booking,
+    status: "disputed",
+    txHashes: hash ? { ...booking.txHashes, dispute: hash } : booking.txHashes,
+  };
+}
+
+export function rescheduleBooking(booking: Booking, sessionAt: Date): Booking {
+  return { ...booking, sessionAt: sessionAt.toISOString() };
+}
+
+export interface ModuleProgress {
+  sessions: Booking[];
+  released: number;
+  /** Sesión agendada que aún no terminó su ciclo de escrow. */
+  active: Booking | null;
+  disputed: Booking | null;
+  nextSessionNumber: number;
+  completed: boolean;
+  lastReleased: Booking | null;
+}
+
+export function moduleProgress(
+  bookings: Booking[],
+  moduleId: string,
+): ModuleProgress {
+  const sessions = bookings
+    .filter((booking) => booking.moduleId === moduleId)
+    .sort((a, b) => a.sessionNumber - b.sessionNumber);
+  const releasedSessions = sessions.filter((b) => b.status === "released");
+  const released = releasedSessions.length;
+  const active =
+    sessions.find((b) =>
+      ["created", "funded", "approved"].includes(b.status),
+    ) ?? null;
+  const disputed = sessions.find((b) => b.status === "disputed") ?? null;
+  return {
+    sessions,
+    released,
+    active,
+    disputed,
+    nextSessionNumber: released + 1,
+    completed: released >= SESSIONS_PER_MODULE,
+    lastReleased: releasedSessions.at(-1) ?? null,
+  };
+}
+
+export function sessionStart(booking: Booking) {
+  return new Date(booking.sessionAt);
+}
+
+export function sessionEnd(booking: Booking) {
+  return new Date(
+    new Date(booking.sessionAt).getTime() + SESSION_MINUTES * 60_000,
+  );
 }
 
 export function sessionHasPassed(booking: Booking, now = new Date()) {
-  return new Date(booking.sessionAt).getTime() <= now.getTime();
+  return sessionStart(booking).getTime() <= now.getTime();
 }
 
-export function completedBookings(bookings: Booking[]) {
-  return bookings.filter((booking) => booking.status === "released");
+export function canReschedule(booking: Booking, now = new Date()) {
+  if (booking.status !== "funded") return false;
+  const hours = (sessionStart(booking).getTime() - now.getTime()) / 3_600_000;
+  return hours >= RESCHEDULE_NOTICE_HOURS;
 }
 
-export function certificateId(booking: Booking) {
-  return `ACTA-${booking.moduleId}-${booking.contractId.slice(-6)}`;
+export function rescheduleDeadline(booking: Booking) {
+  return new Date(
+    sessionStart(booking).getTime() - RESCHEDULE_NOTICE_HOURS * 3_600_000,
+  );
+}
+
+export function meetIsOpen(booking: Booking, now = new Date()) {
+  const opens = sessionStart(booking).getTime() - MEET_OPENS_MINUTES * 60_000;
+  return (
+    now.getTime() >= opens && now.getTime() <= sessionEnd(booking).getTime()
+  );
+}
+
+/** La persona confirma al terminar; en testnet puede hacerlo antes (demo). */
+export function canConfirm(booking: Booking, now = new Date()) {
+  if (booking.status !== "funded" && booking.status !== "approved")
+    return false;
+  return DEMO_MODE || sessionHasPassed(booking, now);
+}
+
+export function minutesUntil(booking: Booking, now = new Date()) {
+  return Math.ceil((sessionStart(booking).getTime() - now.getTime()) / 60_000);
 }

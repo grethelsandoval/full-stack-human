@@ -149,11 +149,19 @@ that the escrow cannot be deployed.
 
 ### Testnet flow
 
+The dApp follows the FSH brand manual v2.0 (tokens, Bricolage Grotesque /
+Inter / JetBrains Mono served from `public/fonts`, logos in `public/brand`) and
+the B2C MVP flow: login → name → Human Stack Check → result → catalog → module
+→ schedule → pay (escrow) → ticket → confirm session → payment released →
+next session … → claim credential.
+
 1. **Google sign-in (Pollar)** creates or restores the user's embedded Stellar wallet.
-   Right after the first login a typeform-style BESSI questionnaire (10
-   questions, one per screen) estimates the user's five skill domains, shows
-   the results and recommends the trainer's available module; results are
-   stored per wallet and can be redone from _Perfil_.
+   The person then enters the name shown on the credential and takes the
+   **Human Stack Check V1** (`src/dapp/humanStackCheck.ts`): 10 fixed items,
+   1–5 scale, one score per layer (sum of two items, 2–10), no global score.
+   Every individual response is stored (`question_id`, `dimension`,
+   `response_value`, `timestamp`). It is an exploratory check inspired by
+   BESSI, never presented as BESSI.
 2. **Friendbot** funds the account with test XLM automatically the first time the
    account does not exist on Horizon; a manual button is also available.
 3. **Test USDC (Circle)**: the "Obtener USDC de prueba" button creates the
@@ -168,16 +176,20 @@ that the escrow cannot be deployed.
    escrow parties need it before funding).
 
 4. **Balances** (XLM + USDC) come from Horizon testnet.
-5. **Escrow**: paying a session deploys a Trustless Work _single-release_ escrow
-   (10 USDC, user = approver + release signer, trainer = service provider +
-   receiver, FSH platform = platform address + dispute resolver), then funds it.
-   Both steps are signed by the user's Pollar wallet. The contract ID is shown
-   with a Stellar Expert link and stored in `localStorage` per wallet. Every
-   on-chain interaction (Friendbot, USDC trustline, deploy, fund, approve,
-   release) links to its transaction on Stellar Expert.
-6. **After the session** the user approves the milestone and releases the funds.
-   In production the trainer would sign the milestone; in this MVP the user
-   confirms the session, as specified in the designs.
+5. **Escrow per session**: each of the 5 sessions of a module is its own
+   Trustless Work _single-release_ escrow (15 USDC estimated price, user =
+   approver + release signer, trainer = service provider + receiver, FSH
+   platform = platform address + dispute resolver). Paying deploys and funds it
+   (two passkey signatures). Contract IDs are stored in `localStorage` per
+   wallet and every on-chain step links to Stellar Expert.
+6. **After the session** the user confirms (approve milestone + release funds).
+   "Tuve un problema" opens an on-chain dispute. The psychologist's
+   confirmation at the start of the session is simulated on testnet
+   (`DEMO_MODE`) until the psychologist panel exists; on testnet the user can
+   also confirm before the scheduled time to walk the whole flow.
+7. **Credential**: after the 5th session is released the user claims the
+   credential, backed by the release transaction of the last session. ACTA
+   issuance is still to be integrated.
 
 Platform/trainer testnet role addresses live in `src/dapp/config.ts`; their
 secret keys are never part of the frontend.
@@ -185,7 +197,8 @@ secret keys are never part of the frontend.
 ## Product boundaries
 
 - The booking dialog prepares a GitHub issue with the selected module and proposed date/time. The visitor must review and submit the issue on GitHub; availability is not confirmed by the landing page. Requests are public, and the interface warns visitors not to include personal information.
-- The Stellar/ACTA credential is a clearly labeled design preview; credential issuance is not implemented. Wallets and escrow smart contracts are implemented in the `/app` dApp on testnet only.
+- ACTA credential issuance is not implemented yet; the `/app` credential is backed by the escrow release transaction. Wallets and escrow smart contracts run on testnet only.
+- Pending in `/app`: automatic Meet link per session (`meetUrl` in `src/dapp/catalog.ts`), real psychologist availability, the psychologist's own confirmation, the confirmation deadline before a dispute, a card on-ramp provider, final prices and resources uploaded by psychologists.
 - No contact information or trainer biographies are fabricated.
 - Impact metrics and source labels reproduce the supplied brief and should receive editorial source verification before use in a commercial campaign.
 - Google Fonts supplies DM Sans, Space Grotesk, and IBM Plex Mono. Local system fallbacks remain available.

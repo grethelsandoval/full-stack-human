@@ -1,6 +1,13 @@
 export const NETWORK = "testnet" as const;
 export const NETWORK_LABEL = "Stellar Testnet";
-export const APP_VERSION = "v0.9.4";
+export const APP_VERSION = "v1.0.0";
+
+/**
+ * Testnet demo: la confirmación de la psicóloga se simula (su panel aún no
+ * existe) y la persona puede confirmar la sesión antes de la hora agendada
+ * para recorrer el flujo completo.
+ */
+export const DEMO_MODE = NETWORK === "testnet";
 
 export const HORIZON_URL = "https://horizon-testnet.stellar.org";
 export const FRIENDBOT_URL = "https://friendbot.stellar.org/";
@@ -22,7 +29,13 @@ export const FSH_PLATFORM_ADDRESS =
 export const FSH_TRAINER_ADDRESS =
   "GC6ZG3IFQ5PH74RCYFTB352KM7CN22RG2AKOOFESGNNB2W7HKNTSUV6Y";
 
-export const SESSION_PRICE_USD = 10;
+/** Precio estimado por sesión en USDC, gas incluido. Precio final: por definir. */
+export const SESSION_PRICE_USD = 15;
+export const SESSIONS_PER_MODULE = 5;
+export const SESSION_MINUTES = 45;
+export const RESCHEDULE_NOTICE_HOURS = 24;
+/** El botón de Meet se activa estos minutos antes de la sesión. */
+export const MEET_OPENS_MINUTES = 10;
 export const PLATFORM_FEE_PERCENT = 0;
 
 export const env = {
@@ -33,5 +46,3 @@ export const env = {
 };
 
 export const LANDING_URL = "/";
-export const DOCS_URL = "https://github.com/grethelsandoval/full-stack-human";
-export const STELLAR_URL = "https://stellar.org";

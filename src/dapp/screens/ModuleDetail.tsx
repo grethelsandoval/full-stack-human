@@ -1,270 +1,190 @@
+import type { CSSProperties } from "react";
+import { Lock } from "lucide-react";
+import { LAYERS, layerLabel, type TrainingModule } from "../catalog";
 import {
-  ArrowLeft,
-  BadgeCheck,
-  BrainCircuit,
-  Check,
-  Clock3,
-  CreditCard,
-  Hexagon,
-  LockKeyhole,
-  LockOpen,
-  Radio,
-  Wallet,
-  Workflow,
-} from "lucide-react";
-import { useState } from "react";
-import { trainer, type TrainingModule } from "../catalog";
-import { SESSION_PRICE_USD, USDC } from "../config";
-import { CopyAddress } from "../ui";
-import type { WalletState } from "../useWallet";
-
-type PayMethod = "wallet" | "fiat";
+  SESSION_MINUTES,
+  SESSION_PRICE_USD,
+  SESSIONS_PER_MODULE,
+} from "../config";
+import type { ModuleProgress } from "../bookings";
+import { Alert, Avatar, Label, ModuleGlyph, Segments, TopBar } from "../ui";
 
 export default function ModuleDetail({
   module,
-  wallet,
+  progress,
   onBack,
-  onContinue,
+  onSchedule,
+  onOpenSession,
+  onClaim,
 }: {
   module: TrainingModule;
-  wallet: WalletState;
+  progress: ModuleProgress;
   onBack: () => void;
-  onContinue: () => void;
+  onSchedule: () => void;
+  onOpenSession: (id: string) => void;
+  onClaim: () => void;
 }) {
-  const [method, setMethod] = useState<PayMethod>("wallet");
+  const info = LAYERS[module.layer];
+  const started = progress.sessions.length > 0;
+
+  let cta;
+  if (progress.completed) {
+    cta = (
+      <button
+        type="button"
+        className="fa-btn fa-btn--primary"
+        onClick={onClaim}
+      >
+        Ver mi credencial
+      </button>
+    );
+  } else if (progress.active) {
+    const active = progress.active;
+    cta = (
+      <button
+        type="button"
+        className="fa-btn fa-btn--primary"
+        onClick={() => onOpenSession(active.id)}
+      >
+        Ver mi sesión {active.sessionNumber}
+      </button>
+    );
+  } else if (progress.disputed) {
+    cta = (
+      <Alert tone="warn">
+        Tu sesión {progress.disputed.sessionNumber} está en disputa. El equipo
+        FSH la revisará antes de agendar la siguiente.
+      </Alert>
+    );
+  } else {
+    cta = (
+      <button
+        type="button"
+        className="fa-btn fa-btn--human"
+        onClick={onSchedule}
+      >
+        {started
+          ? `Agenda tu sesión ${progress.nextSessionNumber}`
+          : "Agenda tu primera sesión"}
+      </button>
+    );
+  }
 
   return (
-    <main className="da-main">
-      <div className="da-breadcrumb">
-        <button type="button" className="da-back" onClick={onBack}>
-          <ArrowLeft size={16} /> Volver al Catálogo
-        </button>
-        <span className="da-mono">
-          <Workflow size={12} /> Módulos MVP &gt; Checkout
-        </span>
-      </div>
-
-      <section className="da-card da-hero-card">
-        <div className="da-tags">
-          <span className={`da-tag ${module.domainTone}`}>
-            Dominio BESSI: {module.domain}
-          </span>
-          <span className="da-tag blue">
-            <Clock3 size={12} /> {module.sessions} Sesión intensiva (45 min)
-          </span>
-          <span className="da-tag mint">
-            <Radio size={12} /> 1 a 1 en vivo
-          </span>
-        </div>
-        <h1>{module.title}</h1>
-        <p className="da-hero-summary">
-          <BrainCircuit size={16} /> {module.summary}
-        </p>
-      </section>
-
-      <section className="da-section" aria-labelledby="aprender-title">
-        <h2 id="aprender-title" className="da-h2-icon">
-          <BadgeCheck size={20} className="mint" /> ¿Qué aprenderás a hacer?
-        </h2>
-        <p className="da-muted">
-          Competencias pragmáticas calibradas para desarrolladores, leads e
-          ingenieros Web3:
-        </p>
-        <ul className="da-outcomes">
-          {module.outcomes.map((outcome) => (
-            <li key={outcome.title} className="da-card">
-              <span className="da-step-icon">
-                <Hexagon size={18} />
-              </span>
-              <div>
-                <h3>{outcome.title}</h3>
-                <p>{outcome.description}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section
-        className="da-card da-section"
-        aria-labelledby="estructura-title"
-      >
-        <div className="da-section-head">
-          <h2 id="estructura-title" className="da-h2-icon">
-            <Workflow size={20} /> Estructura del Entrenamiento
-          </h2>
-          <span className="da-mono mint">{module.phases.length} Fases</span>
-        </div>
-        <p className="da-muted">
-          Una sesión intensiva 1 a 1 guiada por datos psicométricos, que recorre
-          estos bloques:
-        </p>
-        <ol className="da-phases">
-          {module.phases.map((phase, index) => (
-            <li key={phase.title}>
-              <span
-                className={`da-phase-number ${index === 0 ? "current" : ""} ${
-                  index === module.phases.length - 1 ? "final" : ""
-                }`}
-              >
-                {index + 1}
-              </span>
-              <div>
-                <h3>
-                  {phase.title} <code>{phase.duration}</code>
-                </h3>
-                <p>{phase.description}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <p className="da-footnote">
-          *En este MVP cada módulo consta de {module.sessions} sesión. Al
-          confirmarla y liberar el escrow obtienes tu credencial del módulo.
-        </p>
-      </section>
-
-      <section className="da-card da-trainer" aria-labelledby="trainer-title">
-        <div className="da-section-head">
-          <span className="da-mono" id="trainer-title">
-            ENTRENADORA ASIGNADA
-          </span>
-          <span className="da-tag mint">
-            <BadgeCheck size={12} /> Verificada
-          </span>
-        </div>
-        <div className="da-trainer-id">
-          <span className="da-trainer-avatar" aria-hidden="true">
-            MA
-            <Check size={12} />
-          </span>
-          <div>
-            <h3>{trainer.name}</h3>
-            <p className="blue">{trainer.role}</p>
-            <small className="da-mono">{trainer.faculty}</small>
-          </div>
-        </div>
-        <p className="da-muted">{trainer.bio}</p>
-        <div className="da-tags">
-          {trainer.badges.map((badge) => (
-            <span key={badge} className="da-tag neutral">
-              {badge}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section className="da-card da-invest" aria-labelledby="inversion-title">
-        <div className="da-section-head">
-          <div>
-            <span className="da-mono" id="inversion-title">
-              INVERSIÓN DEL MÓDULO
-            </span>
-            <p className="da-amount">
-              ${SESSION_PRICE_USD}.00 <small>USD</small>
-            </p>
-          </div>
-          <div className="da-equiv">
-            <strong className="mint">≈ {SESSION_PRICE_USD}.00 USDC</strong>
-            <small>Red Stellar (Soroban)</small>
-          </div>
-        </div>
-        <p className="da-escrow-note">
-          <LockKeyhole size={16} className="mint" />
-          <span>
-            <strong className="mint">Smart Contract Escrow:</strong> Tus fondos
-            quedan resguardados de forma no custodial en Soroban y se liberan
-            únicamente por cada sesión completada y firmada.
-          </span>
-        </p>
-
-        <h3 className="da-label">Selecciona Método de Pago</h3>
-        <div
-          className="da-segmented"
-          role="tablist"
-          aria-label="Método de pago"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === "wallet"}
-            className={method === "wallet" ? "active" : ""}
-            onClick={() => setMethod("wallet")}
+    <main className="fa-main">
+      <TopBar title="Módulo" onBack={onBack} />
+      <div className="fa-flow">
+        <div className="fa-flow-body">
+          <div
+            className="fa-thumb"
+            style={{ "--c": info.color } as CSSProperties}
           >
-            <Wallet size={16} /> Billetera Stellar
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === "fiat"}
-            className={method === "fiat" ? "active" : ""}
-            onClick={() => setMethod("fiat")}
-          >
-            <CreditCard size={16} /> Tarjeta / Fiat
-          </button>
-        </div>
+            <Label color={info.color}>Módulos · {info.domain}</Label>
+            <div className="fa-row fa-between fa-bottom">
+              <div>
+                <p className="fa-brk">
+                  <span className="fa-cyan">&lt;</span>
+                  {info.name}
+                  <span className="fa-mint">&gt;</span>
+                </p>
+                <p className="fa-muted fa-mt-6">({info.domain})</p>
+              </div>
+              <span style={{ color: info.color }}>
+                <ModuleGlyph icon={module.icon} size={48} />
+              </span>
+            </div>
+          </div>
 
-        {method === "wallet" ? (
-          <div className="da-connected">
-            <div className="da-section-head">
+          <h1 className="fa-h1 fa-mt-24">{module.skill}</h1>
+          <p className="fa-sm fa-mt-6" style={{ color: info.color }}>
+            {module.skill} · {layerLabel(module.layer)}
+          </p>
+          <p className="fa-muted fa-mt-12">
+            {module.definition} {module.summary}
+          </p>
+
+          {started && (
+            <div className="fa-mt-20">
+              <div className="fa-row fa-between">
+                <Label>Tu avance</Label>
+                <span className="fa-mono fa-xs fa-muted">
+                  {progress.released} / {SESSIONS_PER_MODULE}
+                </span>
+              </div>
+              <div className="fa-mt-10">
+                <Segments
+                  total={SESSIONS_PER_MODULE}
+                  done={progress.released}
+                />
+              </div>
+            </div>
+          )}
+
+          <dl className="fa-facts fa-mt-20">
+            <div className="fa-fact">
+              <dt>~{SESSIONS_PER_MODULE}</dt>
+              <dd>sesiones</dd>
+            </div>
+            <div className="fa-fact">
+              <dt>{SESSION_MINUTES} min</dt>
+              <dd>por sesión</dd>
+            </div>
+            <div className="fa-fact">
+              <dt>1 a 1</dt>
+              <dd>en vivo por Meet</dd>
+            </div>
+            <div className="fa-fact">
+              <dt>{SESSION_PRICE_USD} USDC</dt>
+              <dd>por sesión · gas incluido</dd>
+            </div>
+          </dl>
+
+          <Label as="h2">
+            <span className="fa-block fa-mt-28">Quién te entrena</span>
+          </Label>
+          <div className="fa-card fa-card--tight fa-row fa-mt-12">
+            <Avatar initials={module.psychologist.initials} />
+            <div>
+              <b>{module.psychologist.name}</b>
+              <p className="fa-sm fa-muted">{module.psychologist.role}</p>
+            </div>
+          </div>
+
+          <Label as="h2">
+            <span className="fa-block fa-mt-28">Cómo funciona</span>
+          </Label>
+          <ol className="fa-steps fa-mt-6">
+            <li>
               <span>
-                <span className="da-dot" aria-hidden="true" /> Billetera
-                Conectada
+                <b>Sesión 1:</b> tu psicóloga aplica el BESSI oficial y el Big
+                Five. El BESSI dice qué entrenar; el Big Five, cómo.
               </span>
-              <span className="da-mono">POLLAR</span>
-            </div>
-            <dl className="da-kv">
-              <div>
-                <dt>Wallet:</dt>
-                <dd>
-                  {wallet.address ? (
-                    <CopyAddress address={wallet.address} />
-                  ) : (
-                    "—"
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Activo del escrow:</dt>
-                <dd>
-                  <code>{USDC.code} · Circle Testnet</code>
-                </dd>
-              </div>
-              <div>
-                <dt>Contrato Soroban:</dt>
-                <dd>
-                  <code>trustless_work_single_release</code>
-                </dd>
-              </div>
-            </dl>
+            </li>
+            <li>
+              <span>
+                <b>Sesiones 2 a {SESSIONS_PER_MODULE}:</b> práctica aplicada a
+                tu trabajo real.
+              </span>
+            </li>
+            <li>
+              <span>Cada sesión se confirma y agendas la siguiente.</span>
+            </li>
+            <li>
+              <span>
+                Al confirmar la última, reclamas tu credencial verificable en
+                blockchain.
+              </span>
+            </li>
+          </ol>
+          <div className="fa-mt-12">
+            <Alert tone="ok" icon={<Lock size={20} />}>
+              <b>Tu pago se libera solo cuando la sesión ocurre.</b> Queda en
+              escrow hasta que tu psicóloga y tú confirmen la sesión.
+            </Alert>
           </div>
-        ) : (
-          <div className="da-connected da-fiat">
-            <div className="da-section-head">
-              <span>Rampa SEP-24 Anchor</span>
-              <span className="da-mono">Próximamente</span>
-            </div>
-            <p className="da-muted">
-              Paga con tarjeta de crédito/débito o depósito local. Se acuñarán
-              tokens USDC de custodia temporal directamente a tu sesión de
-              escrow. Disponible en la siguiente fase del MVP.
-            </p>
-          </div>
-        )}
-
-        <button
-          type="button"
-          className="da-button da-button-gradient"
-          onClick={onContinue}
-          disabled={method !== "wallet"}
-        >
-          <LockOpen size={18} /> Confirmar Inscripción y Agendar Sesión 1
-        </button>
-        <p className="da-footnote center">
-          <Clock3 size={12} /> Cancelación o reprogramación flexible de sesiones
-          hasta 24h antes.
-        </p>
-      </section>
+        </div>
+        <div className="fa-cta">{cta}</div>
+      </div>
     </main>
   );
 }

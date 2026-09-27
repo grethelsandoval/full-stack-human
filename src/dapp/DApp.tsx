@@ -1,37 +1,55 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { GetEscrowsFromIndexerResponse } from "@trustless-work/escrow";
-import { BadgeCheck, LogOut, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   advanceBooking,
   type Booking,
+  canReschedule,
   loadBookings,
+  markDisputed,
+  moduleProgress,
+  rescheduleBooking,
   saveBooking,
 } from "./bookings";
-import { findModule, type TrainingModule } from "./catalog";
-import { LANDING_URL, NETWORK_LABEL, SESSION_PRICE_USD } from "./config";
-import {
-  clearDiagnostic,
-  type DiagnosticResult,
-  loadDiagnostic,
-  saveDiagnostic,
-} from "./diagnostic";
+import { catalog, findModule, type TrainingModule } from "./catalog";
+import { SESSION_PRICE_USD } from "./config";
 import { useEscrow } from "./escrow";
 import {
-  hasSeenOnboarding,
-  markOnboardingSeen,
-  resetOnboarding,
-} from "./onboarding";
+  type CheckResult,
+  loadCheck,
+  lowestLayers,
+  saveCheck,
+} from "./humanStackCheck";
+import {
+  firstName,
+  loadClaims,
+  loadName,
+  saveClaim,
+  saveName,
+} from "./profile";
 import { parseRoute, type Route, routeToHash } from "./routes";
-import BookingView, { type ReleaseState } from "./screens/BookingView";
-import Certificates from "./screens/Certificates";
-import Dashboard, { type UserMode } from "./screens/Dashboard";
-import { DiagnosticResults, Questionnaire } from "./screens/Diagnostic";
+import { formatDay } from "./scheduling";
+import Catalog from "./screens/Catalog";
+import { CheckIntro, CheckQuestions, CheckResultView } from "./screens/Check";
+import {
+  ClaimCredential,
+  CredentialList,
+  CredentialView,
+} from "./screens/Credential";
+import Home from "./screens/Home";
 import Login from "./screens/Login";
 import ModuleDetail from "./screens/ModuleDetail";
-import OnboardingTour from "./screens/OnboardingTour";
-import Schedule, { type PayState } from "./screens/Schedule";
-import WalletCard from "./screens/WalletCard";
-import { BottomNav, Header, Notice, type Tab } from "./ui";
+import NameStep from "./screens/NameStep";
+import Payment, { type PayState, TopUp } from "./screens/Payment";
+import Profile from "./screens/Profile";
+import Schedule from "./screens/Schedule";
+import {
+  type ConfirmState,
+  ConfirmSession,
+  Released,
+  Reschedule,
+  Ticket,
+} from "./screens/Session";
+import Sessions from "./screens/Sessions";
+import { Alert, type Tab, TabBar, TopBar } from "./ui";
 import { useWallet } from "./useWallet";
 
 function useHashRoute() {
@@ -39,31 +57,30 @@ function useHashRoute() {
     parseRoute(window.location.hash),
   );
   useEffect(() => {
-    const onChange = () => setRoute(parseRoute(window.location.hash));
+    const onChange = () => {
+      setRoute(parseRoute(window.location.hash));
+      window.scrollTo({ top: 0 });
+    };
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
   const navigate = useCallback((next: Route) => {
-    window.location.hash = routeToHash(next);
+    const hash = routeToHash(next);
+    if (window.location.hash !== hash) window.location.hash = hash;
     setRoute(next);
     window.scrollTo({ top: 0 });
   }, []);
   return [route, navigate] as const;
 }
 
-function readBookings(wallet: string | null, version: number) {
-  void version;
-  return wallet ? loadBookings(wallet) : [];
-}
-
-function readDiagnostic(wallet: string | null, version: number) {
-  void version;
-  return wallet ? loadDiagnostic(wallet) : null;
-}
-
-function readTourPending(wallet: string | null, version: number) {
-  void version;
-  return wallet ? !hasSeenOnboarding(wallet) : false;
+/** Re-renders every 30 s so countdowns and Meet windows stay current. */
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now;
 }
 
 function describeError(error: unknown) {
@@ -72,12 +89,32 @@ function describeError(error: unknown) {
     : "Ocurrió un error inesperado.";
 }
 
-function describeSession(date: Date, timezone: string) {
-  return new Intl.DateTimeFormat("es-ES", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: timezone,
-  }).format(date);
+const TAB_FOR: Partial<Record<Route["name"], Tab>> = {
+  inicio: "inicio",
+  "check-resultado": "inicio",
+  perfil: "inicio",
+  modulos: "modulos",
+  sesiones: "sesiones",
+  sesion: "sesiones",
+  credenciales: "credenciales",
+  credencial: "credenciales",
+};
+
+interface PendingSlot {
+  moduleId: string;
+  sessionAt: Date;
+  timezone: string;
+}
+
+function NotFound({ onHome, text }: { onHome: () => void; text: string }) {
+  return (
+    <main className="fa-main">
+      <TopBar onBack={onHome} />
+      <div className="fa-page">
+        <Alert tone="error">{text}</Alert>
+      </div>
+    </main>
+  );
 }
 
 export default function DApp({
@@ -88,122 +125,63 @@ export default function DApp({
   const wallet = useWallet();
   const escrow = useEscrow();
   const [route, navigate] = useHashRoute();
-  const [modeChoice, setMode] = useState<UserMode | null>(null);
-  const [bookingsVersion, setBookingsVersion] = useState(0);
+  const now = useNow();
+  const [version, setVersion] = useState(0);
+  const bump = () => setVersion((v) => v + 1);
+  const [checkSkipped, setCheckSkipped] = useState(false);
+  const [pending, setPending] = useState<PendingSlot | null>(null);
   const [pay, setPay] = useState<PayState>({ step: "idle", error: null });
-  const [release, setRelease] = useState<ReleaseState>({
+  const [confirm, setConfirm] = useState<ConfirmState>({
     step: "idle",
     error: null,
   });
-  const [onchain, setOnchain] = useState<{
-    contractId: string;
-    data: GetEscrowsFromIndexerResponse | null;
-  } | null>(null);
+  const [freshId, setFreshId] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [diagnosticVersion, setDiagnosticVersion] = useState(0);
-  const [diagnosticSkipped, setDiagnosticSkipped] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [tourVersion, setTourVersion] = useState(0);
-  const showTour = useMemo(
-    () => readTourPending(wallet.address, tourVersion),
-    [wallet.address, tourVersion],
-  );
-  const finishTour = useCallback(() => {
-    if (wallet.address) markOnboardingSeen(wallet.address);
-    setTourVersion((version) => version + 1);
-  }, [wallet.address]);
-  const replayTour = () => {
-    if (wallet.address) resetOnboarding(wallet.address);
-    setTourVersion((version) => version + 1);
-    navigate({ name: "dashboard" });
-  };
 
-  const diagnostic = useMemo(
-    () => readDiagnostic(wallet.address, diagnosticVersion),
-    [wallet.address, diagnosticVersion],
-  );
-  const completeDiagnostic = (result: DiagnosticResult) => {
-    saveDiagnostic(result);
-    setDiagnosticVersion((version) => version + 1);
-    setShowResults(true);
-  };
-  const restartDiagnostic = () => {
-    if (wallet.address) clearDiagnostic(wallet.address);
-    setDiagnosticVersion((version) => version + 1);
-    setDiagnosticSkipped(false);
-    setShowResults(false);
-    navigate({ name: "dashboard" });
-  };
+  const address = wallet.address;
+  const data = useMemo(() => {
+    void version;
+    if (!address) return null;
+    return {
+      name: loadName(address),
+      check: loadCheck(address),
+      bookings: loadBookings(address),
+      claims: loadClaims(address),
+    };
+  }, [address, version]);
 
-  const bookings = useMemo(
-    () => readBookings(wallet.address, bookingsVersion),
-    [wallet.address, bookingsVersion],
-  );
-  const mode: UserMode =
-    modeChoice ?? (bookings.length > 0 ? "returning" : "new");
-  const persist = (booking: Booking) => {
+  const signer = address ? { address, signXdr: wallet.signXdr } : null;
+
+  function persist(booking: Booking) {
     saveBooking(booking);
-    setBookingsVersion((version) => version + 1);
-  };
+    bump();
+  }
 
-  const signer = wallet.address
-    ? { address: wallet.address, signXdr: wallet.signXdr }
-    : null;
-
-  const escrowRef = useRef(escrow);
-  useEffect(() => {
-    escrowRef.current = escrow;
-  }, [escrow]);
-
-  const refreshOnchain = useCallback(async (contractId: string) => {
-    try {
-      const data = await escrowRef.current.read(contractId);
-      setOnchain({ contractId, data });
-    } catch {
-      setOnchain({ contractId, data: null });
-    }
-  }, []);
-
-  const activeContract =
-    route.name === "booking"
-      ? (bookings.find((item) => item.id === route.id)?.contractId ?? null)
-      : null;
-
-  useEffect(() => {
-    if (activeContract) void refreshOnchain(activeContract);
-  }, [activeContract, refreshOnchain]);
-
-  async function handlePay(
-    module: TrainingModule,
-    sessionAt: Date,
-    timezone: string,
-  ) {
-    if (!signer) return;
-    if (!escrowConfigured) {
-      setPay({
-        step: "idle",
-        error:
-          "Falta configurar VITE_TRUSTLESS_WORK_API_KEY para desplegar el escrow.",
-      });
-      return;
-    }
+  async function handlePay(module: TrainingModule, slot: PendingSlot) {
+    if (!signer || !data) return;
+    const sessionNumber = moduleProgress(
+      data.bookings,
+      module.id,
+    ).nextSessionNumber;
     setPay({ step: "deploy", error: null });
     let booking: Booking | null = null;
     try {
       const deployed = await escrow.deploy(
         module,
+        sessionNumber,
         signer,
-        describeSession(sessionAt, timezone),
+        `${formatDay(slot.sessionAt, slot.timezone)} ${slot.sessionAt.toISOString()}`,
       );
       booking = {
         id: deployed.contractId,
         moduleId: module.id,
+        sessionNumber,
         wallet: signer.address,
         contractId: deployed.contractId,
         engagementId: deployed.engagementId,
         amount: SESSION_PRICE_USD,
-        sessionAt: sessionAt.toISOString(),
-        timezone,
+        sessionAt: slot.sessionAt.toISOString(),
+        timezone: slot.timezone,
         status: "created",
         txHashes: deployed.hash ? { deploy: deployed.hash } : {},
         createdAt: new Date().toISOString(),
@@ -213,295 +191,466 @@ export default function DApp({
       const fundHash = await escrow.fund(booking.contractId, signer);
       booking = advanceBooking(booking, fundHash);
       persist(booking);
-      setPay({ step: "done", error: null });
-      void wallet.refresh();
-      setMode("returning");
-      navigate({ name: "booking", id: booking.id });
       setPay({ step: "idle", error: null });
+      setPending(null);
+      setFreshId(booking.id);
+      void wallet.refresh();
+      navigate({ name: "sesion", id: booking.id });
     } catch (cause) {
       setPay({ step: "idle", error: describeError(cause) });
-      if (booking) navigate({ name: "booking", id: booking.id });
+      if (booking) {
+        setPending(null);
+        navigate({ name: "sesion", id: booking.id });
+      }
     }
   }
 
   async function handleFundExisting(booking: Booking) {
     if (!signer) return;
-    setRelease({ step: "fund", error: null });
+    setConfirm({ step: "fund", error: null });
     try {
       const hash = await escrow.fund(booking.contractId, signer);
       persist(advanceBooking(booking, hash));
       void wallet.refresh();
+      setConfirm({ step: "idle", error: null });
     } catch (cause) {
-      setRelease({ step: "idle", error: describeError(cause) });
-      return;
+      setConfirm({ step: "idle", error: describeError(cause) });
     }
-    setRelease({ step: "idle", error: null });
   }
 
-  async function handleApprove(booking: Booking) {
+  async function handleConfirm(booking: Booking) {
     if (!signer) return;
-    setRelease({ step: "approve", error: null });
+    let current = booking;
     try {
-      const hash = await escrow.approve(booking.contractId, signer);
-      persist(advanceBooking(booking, hash));
-      setRelease({ step: "idle", error: null });
-      void refreshOnchain(booking.contractId);
+      if (current.status === "funded") {
+        setConfirm({ step: "approve", error: null });
+        const hash = await escrow.approve(current.contractId, signer);
+        current = advanceBooking(current, hash);
+        persist(current);
+      }
+      setConfirm({ step: "release", error: null });
+      const hash = await escrow.release(current.contractId, signer);
+      current = advanceBooking(current, hash);
+      persist(current);
+      setConfirm({ step: "idle", error: null });
+      navigate({ name: "liberada", id: current.id });
     } catch (cause) {
-      setRelease({ step: "idle", error: describeError(cause) });
+      setConfirm({ step: "idle", error: describeError(cause) });
     }
   }
 
-  async function handleRelease(booking: Booking) {
+  async function handleDispute(booking: Booking) {
     if (!signer) return;
-    setRelease({ step: "release", error: null });
+    setConfirm({ step: "dispute", error: null });
     try {
-      const hash = await escrow.release(booking.contractId, signer);
-      persist(advanceBooking(booking, hash));
-      setRelease({ step: "idle", error: null });
-      void refreshOnchain(booking.contractId);
+      const hash = await escrow.dispute(booking.contractId, signer);
+      persist(markDisputed(booking, hash));
+      setConfirm({ step: "idle", error: null });
+      navigate({ name: "sesion", id: booking.id });
     } catch (cause) {
-      setRelease({ step: "idle", error: describeError(cause) });
+      setConfirm({ step: "idle", error: describeError(cause) });
     }
   }
 
-  if (!wallet.isAuthenticated || !wallet.address) {
+  if (!wallet.isAuthenticated || !address || !data) {
     return (
-      <Login
-        configured
-        error={loginError}
-        onLogin={() => {
-          setLoginError(null);
-          try {
-            wallet.login();
-          } catch (cause) {
-            setLoginError(describeError(cause));
-          }
-        }}
-      />
-    );
-  }
-
-  if (!diagnostic && !diagnosticSkipped) {
-    return (
-      <div className="da-shell">
-        <Questionnaire
-          wallet={wallet.address}
-          onComplete={completeDiagnostic}
-          onSkip={() => setDiagnosticSkipped(true)}
-        />
-      </div>
-    );
-  }
-
-  if (diagnostic && showResults) {
-    return (
-      <div className="da-shell">
-        <DiagnosticResults
-          result={diagnostic}
-          onOpenModule={(id) => {
-            setShowResults(false);
-            navigate({ name: "module", id });
-          }}
-          onDashboard={() => {
-            setShowResults(false);
-            navigate({ name: "dashboard" });
+      <div className="fa-app">
+        <Login
+          configured
+          error={loginError}
+          onLogin={() => {
+            setLoginError(null);
+            try {
+              wallet.login();
+            } catch (cause) {
+              setLoginError(describeError(cause));
+            }
           }}
         />
       </div>
     );
   }
 
-  const tab: Tab =
-    route.name === "certificados"
-      ? "certificados"
-      : route.name === "perfil"
-        ? "perfil"
-        : route.name === "dashboard"
-          ? "dashboard"
-          : "modulos";
-
-  function selectTab(next: Tab) {
-    if (next === "dashboard") navigate({ name: "dashboard" });
-    if (next === "certificados") navigate({ name: "certificados" });
-    if (next === "perfil") navigate({ name: "perfil" });
-    if (next === "modulos") {
-      navigate({ name: "dashboard" });
-      window.setTimeout(
-        () =>
-          document
-            .getElementById("catalogo")
-            ?.scrollIntoView({ behavior: "smooth" }),
-        0,
-      );
-    }
+  if (!data.name) {
+    return (
+      <div className="fa-app">
+        <NameStep
+          initial={wallet.profileName ?? ""}
+          onSave={(name) => {
+            saveName(address, name);
+            bump();
+            navigate({ name: data.check ? "inicio" : "check" });
+          }}
+        />
+      </div>
+    );
   }
+
+  const { bookings, check, claims } = data;
+  const name = data.name;
+  const home = () => navigate({ name: "inicio" });
+  const toModule = (module: TrainingModule) =>
+    navigate({ name: "modulo", id: module.id });
+  const toBooking = (booking: Booking) => {
+    setConfirm({ step: "idle", error: null });
+    setPay({ step: "idle", error: null });
+    navigate({ name: "sesion", id: booking.id });
+  };
+  const toSchedule = (module: TrainingModule) => {
+    setPay({ step: "idle", error: null });
+    navigate({ name: "agendar", id: module.id });
+  };
+  const checkRoute = route.name.startsWith("check");
+  const effective: Route =
+    !check && !checkSkipped && !checkRoute ? { name: "check" } : route;
+
+  function onCheckComplete(result: CheckResult) {
+    saveCheck(result);
+    bump();
+    navigate({ name: "check-resultado" });
+  }
+
+  const moduleRoute = (id: string) => findModule(id);
+  const bookingById = (id: string) =>
+    bookings.find((booking) => booking.id === id) ?? null;
+  const missingBooking = (
+    <NotFound onHome={home} text="Sesión no encontrada en este navegador." />
+  );
+  const missingModule = <NotFound onHome={home} text="Módulo no encontrado." />;
 
   let screen;
-  if (route.name === "module" || route.name === "schedule") {
-    const module = findModule(route.id);
-    if (!module) {
+  switch (effective.name) {
+    case "check":
       screen = (
-        <main className="da-main">
-          <Notice tone="error" role="alert">
-            Módulo no encontrado.
-          </Notice>
-        </main>
+        <CheckIntro
+          onStart={() => navigate({ name: "check-preguntas" })}
+          onSkip={
+            check
+              ? home
+              : () => {
+                  setCheckSkipped(true);
+                  home();
+                }
+          }
+        />
       );
-    } else if (route.name === "module") {
+      break;
+    case "check-preguntas":
       screen = (
+        <CheckQuestions
+          wallet={address}
+          onExit={() => navigate({ name: "check" })}
+          onComplete={onCheckComplete}
+        />
+      );
+      break;
+    case "check-resultado":
+      screen = check ? (
+        <CheckResultView
+          result={check}
+          onOpenModule={toModule}
+          onCatalog={() => navigate({ name: "modulos" })}
+        />
+      ) : (
+        <CheckIntro onStart={() => navigate({ name: "check-preguntas" })} />
+      );
+      break;
+    case "modulos":
+      screen = (
+        <Catalog
+          recommendedLayers={check ? lowestLayers(check.scores) : []}
+          bookings={bookings}
+          onSelect={toModule}
+        />
+      );
+      break;
+    case "modulo": {
+      const module = moduleRoute(effective.id);
+      screen = module ? (
         <ModuleDetail
           module={module}
-          wallet={wallet}
-          onBack={() => navigate({ name: "dashboard" })}
-          onContinue={() => navigate({ name: "schedule", id: module.id })}
+          progress={moduleProgress(bookings, module.id)}
+          onBack={() => navigate({ name: "modulos" })}
+          onSchedule={() => toSchedule(module)}
+          onOpenSession={(id) => navigate({ name: "sesion", id })}
+          onClaim={() => navigate({ name: "credencial", id: module.id })}
         />
+      ) : (
+        missingModule
       );
-    } else {
-      screen = (
-        <>
-          {!escrowConfigured && (
-            <div className="da-main" style={{ paddingBottom: 0 }}>
-              <Notice tone="error" role="alert">
-                Falta configurar <code>VITE_TRUSTLESS_WORK_API_KEY</code>; el
-                pago al escrow no estará disponible.
-              </Notice>
-            </div>
-          )}
-          <Schedule
-            module={module}
-            wallet={wallet}
-            pay={pay}
-            onBack={() => navigate({ name: "module", id: module.id })}
-            onPay={(sessionAt, timezone) =>
-              void handlePay(module, sessionAt, timezone)
-            }
-          />
-        </>
-      );
+      break;
     }
-  } else if (route.name === "booking") {
-    const booking = bookings.find((item) => item.id === route.id);
-    screen = booking ? (
-      <BookingView
-        booking={booking}
-        module={findModule(booking.moduleId)}
-        onchain={
-          onchain?.contractId === booking.contractId ? onchain.data : null
-        }
-        release={release}
-        onBack={() => navigate({ name: "dashboard" })}
-        onApprove={() => void handleApprove(booking)}
-        onRelease={() => void handleRelease(booking)}
-        onCertificates={() => navigate({ name: "certificados" })}
-        onRefresh={() => void refreshOnchain(booking.contractId)}
-        onFund={() => void handleFundExisting(booking)}
-      />
-    ) : (
-      <main className="da-main">
-        <Notice tone="error" role="alert">
-          Reserva no encontrada en este navegador.
-        </Notice>
-      </main>
-    );
-  } else if (route.name === "certificados") {
-    screen = (
-      <main className="da-main">
-        <section className="da-card da-intro">
-          <span className="da-tag violet">
-            <BadgeCheck size={12} /> Protocolo ACTA
-          </span>
-          <h1>Certificados On-Chain</h1>
-          <p>
-            Completa la sesión de un módulo y libera su escrow para obtener tu
-            credencial verificable en {NETWORK_LABEL}.
-          </p>
-        </section>
-        <Certificates
-          bookings={bookings}
-          onOpenBooking={(id) => navigate({ name: "booking", id })}
-          onOpenCatalog={() => navigate({ name: "dashboard" })}
+    case "agendar":
+    case "pagar": {
+      const module = moduleRoute(effective.id);
+      if (!module) {
+        screen = missingModule;
+        break;
+      }
+      const progress = moduleProgress(bookings, module.id);
+      if (progress.active || progress.completed || progress.disputed) {
+        screen = (
+          <ModuleDetail
+            module={module}
+            progress={progress}
+            onBack={() => navigate({ name: "modulos" })}
+            onSchedule={() => toSchedule(module)}
+            onOpenSession={(id) => navigate({ name: "sesion", id })}
+            onClaim={() => navigate({ name: "credencial", id: module.id })}
+          />
+        );
+        break;
+      }
+      const slot =
+        effective.name === "pagar" && pending?.moduleId === module.id
+          ? pending
+          : null;
+      screen = slot ? (
+        <Payment
+          module={module}
+          sessionNumber={progress.nextSessionNumber}
+          sessionAt={slot.sessionAt}
+          timezone={slot.timezone}
+          wallet={wallet}
+          pay={pay}
+          escrowConfigured={escrowConfigured}
+          onBack={() => navigate({ name: "agendar", id: module.id })}
+          onPay={() => void handlePay(module, slot)}
+          onTopUp={() => navigate({ name: "recarga", id: module.id })}
         />
-      </main>
-    );
-  } else if (route.name === "perfil") {
-    screen = (
-      <main className="da-main">
-        <WalletCard wallet={wallet} />
-        <section className="da-card">
-          <div className="da-section-head">
-            <h2 className="da-h2-icon">
-              <ShieldCheck size={18} /> Sesión
-            </h2>
-            <span className="da-mono">{NETWORK_LABEL}</span>
-          </div>
-          <p className="da-muted">
-            Tu billetera embebida es administrada por Pollar con tu cuenta de
-            Google. Todas las operaciones ocurren en Stellar Testnet.
-          </p>
-          <div className="da-wallet-actions">
-            <button
-              type="button"
-              className="da-button da-button-ghost"
-              onClick={wallet.logout}
-            >
-              <LogOut size={16} /> Cerrar sesión
-            </button>
-            {diagnostic ? (
-              <button
-                type="button"
-                className="da-button da-button-ghost"
-                onClick={() => setShowResults(true)}
-              >
-                Ver mi diagnóstico
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className="da-button da-button-ghost"
-              onClick={restartDiagnostic}
-            >
-              {diagnostic ? "Repetir diagnóstico" : "Hacer diagnóstico"}
-            </button>
-            <button
-              type="button"
-              className="da-button da-button-ghost"
-              onClick={replayTour}
-            >
-              Ver guía de inicio
-            </button>
-            <a className="da-button da-button-ghost" href={LANDING_URL}>
-              Volver a la landing
-            </a>
-          </div>
-        </section>
-      </main>
-    );
-  } else {
-    screen = (
-      <Dashboard
-        wallet={wallet}
-        bookings={bookings}
-        mode={mode}
-        onMode={setMode}
-        onSelectModule={(module) => navigate({ name: "module", id: module.id })}
-        onOpenBooking={(booking) =>
-          navigate({ name: "booking", id: booking.id })
-        }
-      />
-    );
+      ) : (
+        <Schedule
+          title={`Agenda tu sesión ${progress.nextSessionNumber}`}
+          step="1 / 2"
+          psychologist={module.psychologist}
+          ctaLabel="Continuar al pago"
+          now={now}
+          onBack={() => toModule(module)}
+          onConfirm={(sessionAt, timezone) => {
+            setPending({ moduleId: module.id, sessionAt, timezone });
+            navigate({ name: "pagar", id: module.id });
+          }}
+        />
+      );
+      break;
+    }
+    case "recarga": {
+      const id = effective.id;
+      screen = (
+        <TopUp wallet={wallet} onBack={() => navigate({ name: "pagar", id })} />
+      );
+      break;
+    }
+    case "sesion": {
+      const booking = bookingById(effective.id);
+      const module = booking && findModule(booking.moduleId);
+      screen =
+        booking && module ? (
+          <Ticket
+            booking={booking}
+            module={module}
+            now={now}
+            fresh={freshId === booking.id}
+            busy={confirm.step !== "idle"}
+            error={pay.error ?? confirm.error}
+            onBack={() => navigate({ name: "sesiones" })}
+            onFund={() => void handleFundExisting(booking)}
+            onReschedule={() =>
+              navigate({ name: "reprogramar", id: booking.id })
+            }
+            onConfirm={() => {
+              setConfirm({ step: "idle", error: null });
+              navigate({ name: "confirmar", id: booking.id });
+            }}
+          />
+        ) : (
+          missingBooking
+        );
+      break;
+    }
+    case "reprogramar": {
+      const booking = bookingById(effective.id);
+      const module = booking && findModule(booking.moduleId);
+      if (!booking || !module) {
+        screen = missingBooking;
+        break;
+      }
+      screen = canReschedule(booking, now) ? (
+        <Reschedule booking={booking}>
+          {(notice) => (
+            <Schedule
+              title={`Reprogramar sesión ${booking.sessionNumber}`}
+              psychologist={module.psychologist}
+              ctaLabel="Confirmar nuevo horario"
+              notice={notice}
+              now={now}
+              onBack={() => toBooking(booking)}
+              onConfirm={(sessionAt, timezone) => {
+                persist({ ...rescheduleBooking(booking, sessionAt), timezone });
+                toBooking(booking);
+              }}
+            />
+          )}
+        </Reschedule>
+      ) : (
+        <NotFound
+          onHome={() => toBooking(booking)}
+          text="Ya no es posible reprogramar esta sesión: faltan menos de 24 h o ya fue confirmada."
+        />
+      );
+      break;
+    }
+    case "confirmar": {
+      const booking = bookingById(effective.id);
+      const module = booking && findModule(booking.moduleId);
+      screen =
+        booking && module ? (
+          <ConfirmSession
+            booking={booking}
+            module={module}
+            state={confirm}
+            onClose={() => toBooking(booking)}
+            onConfirm={() => void handleConfirm(booking)}
+            onDispute={() => void handleDispute(booking)}
+          />
+        ) : (
+          missingBooking
+        );
+      break;
+    }
+    case "liberada": {
+      const booking = bookingById(effective.id);
+      const module = booking && findModule(booking.moduleId);
+      screen =
+        booking && module ? (
+          <Released
+            booking={booking}
+            progress={moduleProgress(bookings, module.id)}
+            onNext={() => toSchedule(module)}
+            onHome={home}
+            onClaim={() => navigate({ name: "reclamar", id: module.id })}
+          />
+        ) : (
+          missingBooking
+        );
+      break;
+    }
+    case "sesiones":
+      screen = (
+        <Sessions
+          bookings={bookings}
+          onOpenBooking={toBooking}
+          onSchedule={toSchedule}
+          onCatalog={() => navigate({ name: "modulos" })}
+        />
+      );
+      break;
+    case "reclamar":
+    case "credencial": {
+      const module = moduleRoute(effective.id);
+      if (!module) {
+        screen = missingModule;
+        break;
+      }
+      const progress = moduleProgress(bookings, module.id);
+      const claim = claims.find((item) => item.moduleId === module.id);
+      if (!progress.completed || !progress.lastReleased) {
+        screen = (
+          <NotFound
+            onHome={() => toModule(module)}
+            text="Completa las sesiones del módulo para reclamar tu credencial."
+          />
+        );
+      } else if (!claim) {
+        screen = (
+          <ClaimCredential
+            module={module}
+            onClaim={() => {
+              saveClaim({
+                wallet: address,
+                moduleId: module.id,
+                holder: name,
+                claimedAt: new Date().toISOString(),
+              });
+              bump();
+              navigate({ name: "credencial", id: module.id });
+            }}
+          />
+        );
+      } else {
+        screen = (
+          <CredentialView
+            module={module}
+            claim={claim}
+            lastSession={progress.lastReleased}
+            onExplore={() => navigate({ name: "modulos" })}
+          />
+        );
+      }
+      break;
+    }
+    case "credenciales": {
+      const items = claims
+        .map((claim) => ({ claim, module: findModule(claim.moduleId) }))
+        .filter(
+          (
+            item,
+          ): item is { claim: typeof item.claim; module: TrainingModule } =>
+            Boolean(item.module),
+        );
+      const pendingClaims = catalog.filter(
+        (module) =>
+          moduleProgress(bookings, module.id).completed &&
+          !claims.some((claim) => claim.moduleId === module.id),
+      );
+      screen = (
+        <CredentialList
+          items={items}
+          pending={pendingClaims}
+          onOpen={(module) => navigate({ name: "credencial", id: module.id })}
+          onCatalog={() => navigate({ name: "modulos" })}
+        />
+      );
+      break;
+    }
+    case "perfil":
+      screen = (
+        <Profile
+          name={name}
+          wallet={wallet}
+          onBack={home}
+          onRename={(next) => {
+            saveName(address, next);
+            bump();
+          }}
+          onCheck={() => navigate({ name: "check" })}
+        />
+      );
+      break;
+    default:
+      screen = (
+        <Home
+          name={firstName(name)}
+          bookings={bookings}
+          check={check}
+          now={now}
+          onOpenBooking={toBooking}
+          onOpenModule={toModule}
+          onCheck={() =>
+            navigate({ name: check ? "check-resultado" : "check" })
+          }
+          onCatalog={() => navigate({ name: "modulos" })}
+          onProfile={() => navigate({ name: "perfil" })}
+        />
+      );
   }
 
+  const tab = TAB_FOR[effective.name] ?? null;
   return (
-    <div className="da-shell">
-      <Header
-        userMode={mode}
-        onMenu={() => navigate({ name: "dashboard" })}
-        onProfile={() => navigate({ name: "perfil" })}
-      />
+    <div className="fa-app">
       {screen}
-      <BottomNav active={tab} onSelect={selectTab} />
-      {showTour && route.name === "dashboard" && (
-        <OnboardingTour onFinish={finishTour} />
+      {tab && (
+        <TabBar active={tab} onSelect={(next) => navigate({ name: next })} />
       )}
     </div>
   );

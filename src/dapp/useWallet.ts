@@ -8,7 +8,12 @@ import {
   type Balances,
 } from "./stellar";
 
-export type WalletTask = "idle" | "friendbot" | "faucet" | "refreshing";
+export type WalletTask =
+  | "idle"
+  | "friendbot"
+  | "trustline"
+  | "faucet"
+  | "refreshing";
 
 export interface WalletTx {
   label: string;
@@ -18,6 +23,8 @@ export interface WalletTx {
 export interface WalletState {
   address: string | null;
   email: string | null;
+  /** Nombre y apellido del perfil de Google (Pollar). */
+  profileName: string | null;
   isAuthenticated: boolean;
   verified: boolean;
   balances: Balances;
@@ -30,6 +37,7 @@ export interface WalletState {
   logout: () => void;
   refresh: () => Promise<Balances>;
   fundXlm: () => Promise<void>;
+  enableUsdc: () => Promise<boolean>;
   claimUsdc: () => Promise<void>;
   signXdr: (xdr: string) => Promise<string>;
   signAndSubmit: (xdr: string) => Promise<string>;
@@ -111,39 +119,58 @@ export function useWallet(): WalletState {
     [pollar],
   );
 
+  /** Creates the USDC trustline (signed by the Pollar wallet) when missing. */
+  const ensureTrustline = useCallback(async () => {
+    const current = await refresh();
+    if (current.hasUsdcTrustline) return;
+    const outcome = await pollar.setTrustline({
+      code: USDC.code,
+      issuer: USDC.issuer,
+    });
+    if (outcome.status === "error")
+      throw new Error(
+        outcome.details ?? "No se pudo activar USDC en tu wallet.",
+      );
+    await refresh();
+    if (outcome.hash) setLastTx({ label: "Activar USDC", hash: outcome.hash });
+  }, [pollar, refresh]);
+
+  const enableUsdc = useCallback(async () => {
+    if (!address) return false;
+    setTask("trustline");
+    setError(null);
+    try {
+      await ensureTrustline();
+      setNotice("Tu wallet ya puede recibir USDC.");
+      return true;
+    } catch (cause) {
+      setError(describeError(cause));
+      return false;
+    } finally {
+      setTask("idle");
+    }
+  }, [address, ensureTrustline]);
+
   /**
-   * Ensures the USDC trustline exists (signed by the Pollar wallet) and then
-   * opens the Circle testnet faucet so the user can request test USDC.
+   * Ensures the USDC trustline exists and then opens the Circle testnet
+   * faucet so the user can request test USDC.
    */
   const claimUsdc = useCallback(async () => {
     if (!address) return;
     setTask("faucet");
     setError(null);
     try {
-      const current = await refresh();
-      if (!current.hasUsdcTrustline) {
-        const outcome = await pollar.setTrustline({
-          code: USDC.code,
-          issuer: USDC.issuer,
-        });
-        if (outcome.status === "error")
-          throw new Error(
-            outcome.details ?? "No se pudo crear la trustline de USDC.",
-          );
-        await refresh();
-        if (outcome.hash)
-          setLastTx({ label: "Trustline USDC", hash: outcome.hash });
-      }
+      await ensureTrustline();
       window.open(USDC_FAUCET_URL, "_blank", "noopener");
       setNotice(
-        "Trustline USDC lista. Pide USDC de prueba en el faucet de Circle (red Stellar) con tu dirección y pulsa actualizar.",
+        "En el faucet de Circle elige «Stellar Testnet», pega tu dirección y vuelve para actualizar tu saldo.",
       );
     } catch (cause) {
       setError(describeError(cause));
     } finally {
       setTask("idle");
     }
-  }, [address, pollar, refresh]);
+  }, [address, ensureTrustline]);
 
   useEffect(() => {
     if (!address) return;
@@ -159,11 +186,16 @@ export function useWallet(): WalletState {
     };
   }, [address, refresh, fundXlm]);
 
+  const profile = pollar.isAuthenticated
+    ? pollar.getClient().getUserProfile()
+    : null;
+
   return {
     address,
-    email: pollar.isAuthenticated
-      ? (pollar.getClient().getUserProfile()?.mail ?? null)
-      : null,
+    email: profile?.mail ?? null,
+    profileName:
+      [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+      null,
     isAuthenticated: pollar.isAuthenticated,
     verified: pollar.verified,
     balances: address ? balances : EMPTY_BALANCES,
@@ -182,6 +214,7 @@ export function useWallet(): WalletState {
     },
     refresh,
     fundXlm,
+    enableUsdc,
     claimUsdc,
     signXdr,
     signAndSubmit,
