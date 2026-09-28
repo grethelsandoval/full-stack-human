@@ -69,9 +69,6 @@ describe("Full Stack Human landing", () => {
       name: "Haz el Human Stack Check",
     }))
       expect(cta).toHaveAttribute("href", "/app");
-    expect(
-      screen.getAllByRole("link", { name: "Comienza tu evolución" })[0],
-    ).toHaveAttribute("href", "/app");
   });
 
   it("cites a source next to every statistic", () => {

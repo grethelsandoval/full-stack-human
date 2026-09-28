@@ -96,9 +96,6 @@ export default function App() {
               </a>
             ))}
           </nav>
-          <a href="/app" className="button button-primary nav-cta">
-            Comienza tu evolución <ArrowUpRight size={16} />
-          </a>
           <button
             className="icon-button mobile-toggle"
             aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
@@ -121,9 +118,6 @@ export default function App() {
                 <ArrowUpRight size={16} />
               </a>
             ))}
-            <a href="/app" className="button button-primary">
-              Comienza tu evolución <ArrowUpRight size={16} />
-            </a>
           </nav>
         )}
       </header>
