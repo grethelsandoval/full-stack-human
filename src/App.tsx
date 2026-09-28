@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -30,6 +30,9 @@ import {
 } from "./data";
 
 type ModalState = { type: "credential" } | { type: "terms" } | null;
+
+const sentenceCase = (text: string) =>
+  text.charAt(0) + text.slice(1).toLowerCase();
 
 const contactUrl = `${repository}/issues/new?title=Contacto%20Full%20Stack%20Human`;
 
@@ -69,10 +72,7 @@ function Source({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeDomain, setActiveDomain] = useState(0);
   const [modal, setModal] = useState<ModalState>(null);
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const domain = domains[activeDomain];
   const navLinks = [
     ["Problema", "#problema"],
     ["Metodología", "#metodologia"],
@@ -80,22 +80,6 @@ export default function App() {
     ["Cómo funciona", "#como-funciona"],
     ["Equipo", "#equipo"],
   ];
-
-  function handleTabKey(
-    event: KeyboardEvent<HTMLButtonElement>,
-    index: number,
-  ) {
-    let next: number;
-    if (event.key === "ArrowRight") next = (index + 1) % domains.length;
-    else if (event.key === "ArrowLeft")
-      next = (index + domains.length - 1) % domains.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = domains.length - 1;
-    else return;
-    event.preventDefault();
-    setActiveDomain(next);
-    tabs.current[next]?.focus();
-  }
 
   return (
     <>
@@ -266,73 +250,64 @@ export default function App() {
               </div>
             </div>
 
-            <div className="workspace">
-              <div className="workspace-top">
-                <span className="window-dots" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="mono-label">
-                  <span className="prompt">$</span> fsh diagnose --bessi
+            <div className="layers-head">
+              <h3 className="layers-title">
+                32 habilidades. 5 capas. Un plan hecho para ti.
+              </h3>
+              <div className="module-name-example">
+                <span className="mono-label">NOMBRE DE UN MÓDULO</span>
+                <span className="mono">
+                  Regulación de metas · Runtime (Autogestión)
                 </span>
               </div>
-              <div
-                className="domain-tabs"
-                role="tablist"
-                aria-label="Las cinco capas FSH (dominios BESSI)"
+            </div>
+
+            <div className="layers-grid">
+              {domains.map((item) => (
+                <article
+                  key={item.code}
+                  className={`layer-column ${item.color}`}
+                  aria-labelledby={`layer-${item.code}`}
+                >
+                  <header className="layer-column-head">
+                    <h4 id={`layer-${item.code}`}>{item.layer}</h4>
+                    <span className="mono">
+                      ({sentenceCase(item.name)}) · {item.skills.length}
+                    </span>
+                  </header>
+                  <ul className="layer-skills">
+                    {item.skills.map((skill) => (
+                      <li key={skill}>{skill}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+              <article
+                className="layer-column mist"
+                aria-labelledby="layer-transversales"
               >
-                {domains.map((item, index) => (
-                  <button
-                    ref={(element) => {
-                      tabs.current[index] = element;
-                    }}
-                    key={item.code}
-                    id={`tab-${index}`}
-                    role="tab"
-                    aria-selected={activeDomain === index}
-                    aria-controls={`panel-${index}`}
-                    aria-label={`${item.layer} ${item.name}`}
-                    tabIndex={activeDomain === index ? 0 : -1}
-                    className={`${item.color}${activeDomain === index ? " active" : ""}`}
-                    onClick={() => setActiveDomain(index)}
-                    onKeyDown={(event) => handleTabKey(event, index)}
-                  >
-                    <item.icon size={20} aria-hidden="true" />
-                    <span className="tab-layer">{item.layer}</span>
-                    <span className="tab-domain">{item.name}</span>
-                  </button>
-                ))}
-              </div>
-              <div
-                id={`panel-${activeDomain}`}
-                aria-labelledby={`tab-${activeDomain}`}
-                role="tabpanel"
-                tabIndex={0}
-                className={`domain-panel ${domain.color}`}
-              >
-                <div className="domain-content">
-                  <p className="mono-label domain-kicker">
-                    <span className="layer-tag">{domain.layer}</span>
-                    {domain.name} · {domain.skills.length} habilidades
-                  </p>
-                  <h3>{domain.title}</h3>
-                  <p>{domain.description}</p>
-                </div>
-                <ul className="skill-list">
-                  {domain.skills.map((skill) => (
-                    <li key={skill}>
-                      <span className="bracket open">&lt;</span>
-                      {skill}
-                      <span className="bracket close">&gt;</span>
-                    </li>
+                <header className="layer-column-head">
+                  <h4 id="layer-transversales">Transversales</h4>
+                  <span className="mono">
+                    (facetas compuestas) · {transversalSkills.length}
+                  </span>
+                </header>
+                <ul className="layer-skills">
+                  {transversalSkills.map((skill) => (
+                    <li key={skill}>{skill}</li>
                   ))}
                 </ul>
-              </div>
-              <p className="workspace-note mono-label">
-                +3 transversales: {transversalSkills.join(" · ")}
-              </p>
+              </article>
             </div>
+            <p className="layers-note">
+              9 + 5 + 5 + 5 + 5 + 3 = <strong>32</strong>. Cada habilidad es un
+              módulo de unas 5 sesiones; todas son igual de importantes. La capa
+              siempre se escribe con su dominio BESSI entre paréntesis. BESSI:
+              «Un marco científico validado de 32 habilidades sociales,
+              emocionales y conductuales en cinco dominios, con adaptación al
+              español y formas cortas de 96, 45 y 20 ítems.»
+              <Source>Soto et al., 2022; Postigo et al., 2024; Sewell et al., 2025</Source>
+            </p>
 
             <div className="bessi-facts">
               {bessiFacts.map((fact) => (

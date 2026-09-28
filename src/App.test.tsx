@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
-import { domains, evidence, modules } from "./data";
+import { domains, evidence, modules, transversalSkills } from "./data";
 import { catalog, LAYERS } from "./dapp/catalog";
 
 describe("Full Stack Human landing", () => {
@@ -15,31 +15,27 @@ describe("Full Stack Human landing", () => {
     }
   });
 
-  it("selects every BESSI layer with accessible mouse and keyboard navigation", async () => {
-    const user = userEvent.setup();
+  it("shows all 32 skills grouped in six layer columns like the brand manual", () => {
     render(<App />);
+    let total = 0;
     for (const domain of domains) {
-      const tab = screen.getByRole("tab", {
-        name: `${domain.layer} ${domain.name}`,
+      const column = screen.getByRole("article", {
+        name: domain.layer,
       });
-      await user.click(tab);
-      expect(tab).toHaveAttribute("aria-selected", "true");
-      const panel = screen.getByRole("tabpanel");
-      expect(within(panel).getByText(domain.title)).toBeVisible();
-      for (const skill of domain.skills)
-        expect(within(panel).getByText(skill)).toBeVisible();
+      expect(column).toHaveClass(domain.color);
       expect(
-        screen.getAllByRole("tab").filter((item) => item.tabIndex === 0),
-      ).toHaveLength(1);
+        within(column).getByText(
+          `(${domain.name.charAt(0)}${domain.name.slice(1).toLowerCase()}) · ${domain.skills.length}`,
+        ),
+      ).toBeVisible();
+      for (const skill of domain.skills)
+        expect(within(column).getByText(skill)).toBeVisible();
+      total += domain.skills.length;
     }
-    await user.keyboard("{ArrowRight}");
-    expect(
-      screen.getByRole("tab", { name: "Runtime Autogestión" }),
-    ).toHaveFocus();
-    await user.keyboard("{End}");
-    expect(screen.getByRole("tab", { name: "Fork Innovación" })).toHaveFocus();
-    await user.keyboard("{Home}{ArrowLeft}");
-    expect(screen.getByRole("tab", { name: "Fork Innovación" })).toHaveFocus();
+    const transversal = screen.getByRole("article", { name: "Transversales" });
+    for (const skill of transversalSkills)
+      expect(within(transversal).getByText(skill)).toBeVisible();
+    expect(total + transversalSkills.length).toBe(32);
   });
 
   it("maps each layer to the domain color of the brand manual", () => {
