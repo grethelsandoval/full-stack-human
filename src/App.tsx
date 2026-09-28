@@ -134,7 +134,7 @@ export default function App() {
           <div className="container hero-layout">
             <div className="hero-copy">
               <p className="terminal-label">
-                <span className="prompt">$</span> fsh pitch --2026
+                fsh pitch --2026
               </p>
               <h1>
                 Tu arquitectura técnica ya es fuerte.{" "}
@@ -527,7 +527,7 @@ export default function App() {
         <section className="final-cta fsh-blueprint">
           <div className="container">
             <p className="terminal-label">
-              <span className="prompt">$</span> medir --bessi › personalizar
+              medir --bessi › personalizar
               --big-five › entrenar --1a1 › certificar --blockchain
             </p>
             <h2>Refactoriza tu arquitectura humana.</h2>
@@ -535,15 +535,6 @@ export default function App() {
               <a className="button button-primary" href="/app">
                 Haz el Human Stack Check
                 <ArrowRight size={18} />
-              </a>
-              <a
-                className="button button-human"
-                href={`${repository}/issues/new?title=Entrenar%20a%20mi%20equipo`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Entrena a tu equipo
-                <ArrowUpRight size={18} />
               </a>
             </div>
             <p className="mono-label">GRATIS · 1 MINUTO · SIN TARJETA</p>

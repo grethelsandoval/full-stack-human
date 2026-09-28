@@ -181,9 +181,6 @@ dd {
   font-size: var(--fs-sm);
   color: var(--fsh-fog);
 }
-.prompt {
-  color: var(--fsh-mint);
-}
 .eyebrow {
   display: flex;
   align-items: center;

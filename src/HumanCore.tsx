@@ -24,7 +24,7 @@ export default function HumanCore() {
         <span>fsh — zsh</span>
       </div>
       <pre className="terminal-body" aria-hidden="true">
-        <span className="prompt">$</span> fsh stack --status{"\n"}
+        fsh stack --status{"\n"}
         {stack.map((layer) => (
           <span key={layer.name} className="terminal-row">
             <span className="terminal-name">{layer.name}</span>

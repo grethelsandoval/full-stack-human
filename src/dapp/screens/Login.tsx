@@ -39,8 +39,8 @@ export default function Login({
         <img
           src="/brand/fsh-simbolo-color-dark.svg"
           alt="Full Stack Human"
-          width={112}
-          height={60}
+          width={224}
+          height={120}
         />
         <p className="fa-label fa-mt-40">
           Entrenamiento de habilidades blandas
