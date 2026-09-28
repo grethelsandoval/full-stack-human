@@ -68,10 +68,6 @@ export default function Login({
         >
           <GoogleMark /> Continuar con Google
         </button>
-        <p className="fa-xs fa-muted fa-center">
-          Tu cuenta se protege con una passkey: firmas con tu huella o Face ID.
-          Sin contraseñas ni claves privadas.
-        </p>
       </div>
     </main>
   );

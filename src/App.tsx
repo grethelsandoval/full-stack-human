@@ -562,7 +562,6 @@ export default function App() {
                 width={236}
                 height={32}
               />
-              <p>Evidencia, no humo.</p>
             </div>
             <nav aria-label="Enlaces del pie de página">
               <a href={repository} target="_blank" rel="noreferrer">

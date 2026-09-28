@@ -279,12 +279,11 @@ describe("sesiones y escrow", () => {
 });
 
 describe("pantallas", () => {
-  it("login uses Google and explains the passkey", () => {
+  it("login uses Google", () => {
     render(<Login configured onLogin={vi.fn()} />);
     expect(
       screen.getByRole("button", { name: /Continuar con Google/ }),
     ).toBeEnabled();
-    expect(screen.getByText(/passkey/)).toBeInTheDocument();
   });
 
   it("answers the ten questions and returns the result", async () => {

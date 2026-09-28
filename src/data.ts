@@ -286,7 +286,7 @@ export const whyUs = [
     text: "Traducimos 32 habilidades a capas que un builder entiende: Runtime, API, Merge, Firewall y Fork. Sin jerga de recursos humanos.",
   },
   {
-    title: "Evidencia, no humo",
+    title: "Medición con evidencia",
     text: "Medición oficial con BESSI y Big Five en la sesión 1 y, al cierre, para ver el avance. Solo cifras con fuente primaria auditada.",
   },
   {
