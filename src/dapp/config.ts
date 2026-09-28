@@ -30,7 +30,7 @@ export const FSH_TRAINER_ADDRESS =
   "GC6ZG3IFQ5PH74RCYFTB352KM7CN22RG2AKOOFESGNNB2W7HKNTSUV6Y";
 
 /** Precio estimado por sesión en USDC, gas incluido. Precio final: por definir. */
-export const SESSION_PRICE_USD = 15;
+export const SESSION_PRICE_USD = 3;
 export const SESSIONS_PER_MODULE = 5;
 export const SESSION_MINUTES = 45;
 export const RESCHEDULE_NOTICE_HOURS = 24;

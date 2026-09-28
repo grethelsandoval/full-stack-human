@@ -180,7 +180,7 @@ next session … → claim credential.
 
 4. **Balances** (XLM + USDC) come from Horizon testnet.
 5. **Escrow per session**: each of the 5 sessions of a module is its own
-   Trustless Work _single-release_ escrow (15 USDC estimated price, user =
+   Trustless Work _single-release_ escrow (3 USDC estimated price, user =
    approver + release signer, trainer = service provider + receiver, FSH
    platform = platform address + dispute resolver). Paying deploys and funds it
    (two passkey signatures). Contract IDs are stored in `localStorage` per

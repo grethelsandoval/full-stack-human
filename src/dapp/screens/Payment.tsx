@@ -199,7 +199,7 @@ export function TopUp({
   wallet: WalletState;
   onBack: () => void;
 }) {
-  const [amount, setAmount] = useState(30);
+  const [amount, setAmount] = useState(6);
   const enough = hasEnoughUsdc(wallet.balances, SESSION_PRICE_USD);
   const trustline = wallet.balances.hasUsdcTrustline;
 
@@ -210,7 +210,7 @@ export function TopUp({
         <div className="fa-flow-body">
           <Label as="h2">¿Cuánto quieres recargar?</Label>
           <div className="fa-chips fa-mt-12" role="group" aria-label="Monto">
-            {[15, 30, 75].map((value) => (
+            {[3, 6, 15].map((value) => (
               <button
                 key={value}
                 type="button"

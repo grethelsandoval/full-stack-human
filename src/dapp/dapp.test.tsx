@@ -205,7 +205,7 @@ describe("sesiones y escrow", () => {
       "mar 6 oct",
       "e-2",
     );
-    expect(payload.amount).toBe(15);
+    expect(payload.amount).toBe(3);
     expect(payload.title).toBe("Regulación de la confianza · Sesión 2");
     expect(payload.roles).toMatchObject({
       approver: WALLET,
@@ -371,7 +371,7 @@ describe("pantallas", () => {
         onTopUp={onTopUp}
       />,
     );
-    expect(screen.getByText(/Te faltan/)).toHaveTextContent("15.00 USDC");
+    expect(screen.getByText(/Te faltan/)).toHaveTextContent("3.00 USDC");
     await user.click(screen.getByRole("button", { name: "Recarga tu saldo" }));
     expect(onTopUp).toHaveBeenCalled();
   });
@@ -393,7 +393,7 @@ describe("pantallas", () => {
     );
     expect(screen.getByText("Sesión agendada y pagada")).toBeInTheDocument();
     expect(
-      screen.getByText("15.00 USDC retenidos en escrow"),
+      screen.getByText("3.00 USDC retenidos en escrow"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Reprogramar/ }),
