@@ -1,24 +1,6 @@
 /* Full Stack Human — app (/app). Tokens v1.0 del manual de marca.
-   Todo está bajo .fa-app para no afectar a la landing. */
-
-@font-face {
-  font-family: "Bricolage Grotesque";
-  src: url("/fonts/BricolageGrotesque.ttf") format("truetype");
-  font-weight: 200 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter.ttf") format("truetype");
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "JetBrains Mono";
-  src: url("/fonts/JetBrainsMono.ttf") format("truetype");
-  font-weight: 100 800;
-  font-display: swap;
-}
+   Todo está bajo .fa-app para no afectar a la landing.
+   Las @font-face viven en src/brand/tokens.css. */
 
 .fa-app {
   --fsh-midnight: #0a0f1e;

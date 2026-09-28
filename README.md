@@ -16,12 +16,15 @@ un pitch confuso, quemar a su equipo core en la carrera hacia mainnet o
 disolverse por conflictos que nadie supo coordinar.
 
 - **Comunicación ineficaz cuesta dinero.** El _Pulse of the Profession_ de PMI
-  (2013) estima que por cada USD 1,000 M invertidos en proyectos se pierden
-  USD 75 M por comunicación deficiente.
-- **La mayoría de los proyectos de software no cumplen.** Los informes CHAOS del
-  Standish Group sitúan entre ~68 % y 84 % los proyectos con retrasos,
-  sobrecostos o fallos, y las causas dominantes son organizacionales y de
-  comunicación, no de código.
+  (2013) estima que por cada USD 1,000 M invertidos en proyectos, USD 135 M
+  están en riesgo, y el 56 % (USD 75 M) se debe a una comunicación ineficaz.
+- **La pericia técnica no hace al líder.** En Project Oxygen (Bock, 2015;
+  Garvin, 2013, _HBR_), Google encontró que la pericia técnica fue la menos
+  determinante de las ocho conductas que distinguían a sus mejores managers.
+- **Casi ningún equipo coordina bien.** Forrester Consulting para Atlassian
+  (2023): solo el 2 % de las organizaciones resultó plenamente eficaz en
+  alineación de objetivos, planificación y seguimiento, e intercambio de
+  conocimiento.
 - **Las habilidades sociales valen cada vez más.** Deming (2017, _QJE_) muestra
   que entre 1980 y 2012 los empleos con alta demanda de habilidades sociales
   crecieron ~12 puntos porcentuales del empleo en EE. UU., y que los mayores

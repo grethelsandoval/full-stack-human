@@ -1,52 +1,43 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import {
-  ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  Blocks,
-  BookOpen,
+  BadgeCheck,
   Check,
-  CheckCheck,
   ChevronRight,
-  Code2,
   ExternalLink,
   Fingerprint,
-  GraduationCap,
-  Layers3,
-  LockKeyhole,
+  Link2,
   Menu,
-  Mic2,
-  Network,
-  Orbit,
   ShieldCheck,
-  Sparkles,
-  TrendingUp,
-  TriangleAlert,
-  UsersRound,
-  Wallet,
+  Users,
   X,
 } from "lucide-react";
 import HumanCore from "./HumanCore";
 import { FshSymbol } from "./brand/Logo";
 import Modal from "./Modal";
-import { domains, modules, repository, trainerValues } from "./data";
+import {
+  bessiFacts,
+  bigFiveExamples,
+  domains,
+  escrowSteps,
+  evidence,
+  modules,
+  repository,
+  steps,
+  transversalSkills,
+  whyUs,
+} from "./data";
 
-type ModalState =
-  | { type: "booking"; index: number }
-  | { type: "credential" }
-  | { type: "terms" }
-  | null;
+type ModalState = { type: "credential" } | { type: "terms" } | null;
 
-function Brand({ footer = false }: { footer?: boolean }) {
+const contactUrl = `${repository}/issues/new?title=Contacto%20Full%20Stack%20Human`;
+
+function Brand() {
   return (
     <a href="#inicio" className="brand" aria-label="Full Stack Human — inicio">
-      <span className="brand-icon">
-        <FshSymbol size={34} />
-      </span>
-      <span>
-        Full Stack Human
-        {footer && <small>FSH HUB · HABILIDADES BLANDAS</small>}
-      </span>
+      <FshSymbol size={36} />
+      <span className="fsh-wordmark">Full Stack Human</span>
     </a>
   );
 }
@@ -67,119 +58,12 @@ function SectionLabel({
   );
 }
 
-function BookingForm({ index }: { index: number }) {
-  const module = modules[index];
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("16:00");
-  const [request, setRequest] = useState("");
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  function prepareRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const dateInput = form.elements.namedItem("date") as HTMLInputElement;
-    const start = new Date(`${date}T${time}`);
-    dateInput.setCustomValidity(
-      start <= new Date() ? "Elige una fecha y hora futuras." : "",
-    );
-    if (!form.reportValidity()) return;
-    const body = `Hola, me gustaría coordinar una sesión del módulo ${module.id}: ${module.title}.\n\nHorario propuesto: ${date}, ${time} (${timezone}).\n\nQuedo a la espera de confirmar disponibilidad con el equipo.\n\nPor favor, no compartas datos personales en este hilo público.`;
-    setRequest(
-      `${repository}/issues/new?title=${encodeURIComponent(`Solicitud de sesión — Módulo ${module.id}`)}&body=${encodeURIComponent(body)}`,
-    );
-  }
-
+function Source({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <div className={`booking-module ${module.color}`}>
-        <module.icon size={25} />
-        <div>
-          <small>
-            MÓDULO {module.id} · {module.domain}
-          </small>
-          <h3>{module.title}</h3>
-        </div>
-      </div>
-      <p className="modal-description">
-        Propón un horario para trabajar estas habilidades con una entrenadora.
-        El equipo confirmará la disponibilidad contigo.
-      </p>
-      <div className="booking-skills">
-        {module.skills.map((skill) => (
-          <span key={skill}>
-            <Check size={14} />
-            {skill}
-          </span>
-        ))}
-      </div>
-      <form onSubmit={prepareRequest}>
-        <div className="form-grid">
-          <label>
-            Fecha propuesta
-            <input
-              name="date"
-              aria-label="Fecha propuesta"
-              type="date"
-              min={today}
-              value={date}
-              required
-              onChange={(e) => {
-                setDate(e.target.value);
-                e.target.setCustomValidity("");
-                setRequest("");
-              }}
-            />
-          </label>
-          <label>
-            Hora local
-            <input
-              aria-label="Hora local"
-              type="time"
-              value={time}
-              required
-              onChange={(e) => {
-                setTime(e.target.value);
-                const dateInput = e.target.form?.elements.namedItem("date");
-                if (dateInput instanceof HTMLInputElement)
-                  dateInput.setCustomValidity("");
-                setRequest("");
-              }}
-            />
-          </label>
-        </div>
-        <p className="form-note">
-          Zona horaria: {timezone}. El horario todavía no está reservado.
-        </p>
-        {request ? (
-          <div className="request-ready" role="status">
-            <p>
-              <CheckCheck size={18} /> Tu propuesta está lista.
-            </p>
-            <a
-              className="button button-primary"
-              href={request}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Enviar solicitud en GitHub <ArrowUpRight size={17} />
-            </a>
-            <small>
-              Revisa y publica la solicitud en GitHub para enviarla. Necesitarás
-              una cuenta. No incluyas datos personales.
-            </small>
-          </div>
-        ) : (
-          <button type="submit" className="button button-primary w-full">
-            Preparar solicitud <ArrowRight size={17} />
-          </button>
-        )}
-      </form>
-      <p className="privacy-note">
-        <LockKeyhole size={13} /> No almacenamos tus datos en esta página.
-      </p>
-    </>
+    <p className="source">
+      <span className="source-line" />
+      Fuente · {children}
+    </p>
   );
 }
 
@@ -190,10 +74,11 @@ export default function App() {
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const domain = domains[activeDomain];
   const navLinks = [
+    ["Problema", "#problema"],
     ["Metodología", "#metodologia"],
     ["Módulos", "#modulos"],
-    ["Certificación", "#certificacion"],
-    ["Entrenadoras", "#entrenadoras"],
+    ["Cómo funciona", "#como-funciona"],
+    ["Equipo", "#equipo"],
   ];
 
   function handleTabKey(
@@ -227,7 +112,7 @@ export default function App() {
               </a>
             ))}
           </nav>
-          <a href="/app" className="nav-cta">
+          <a href="/app" className="button button-primary nav-cta">
             Comienza tu evolución <ArrowUpRight size={16} />
           </a>
           <button
@@ -252,215 +137,150 @@ export default function App() {
                 <ArrowUpRight size={16} />
               </a>
             ))}
+            <a href="/app" className="button button-primary">
+              Comienza tu evolución <ArrowUpRight size={16} />
+            </a>
           </nav>
         )}
       </header>
 
       <main id="contenido">
-        <section className="hero grid-background" id="inicio">
-          <div className="hero-ambient" />
+        <section className="hero fsh-blueprint" id="inicio">
+          <div className="hero-fade" />
           <div className="container hero-layout">
             <div className="hero-copy">
-              <div className="ecosystem-badge">
-                <span className="status-dot" />
-                Powered by Stellar & Soroban Ecosystem
-                <ArrowUpRight size={12} />
-              </div>
+              <p className="terminal-label">
+                <span className="prompt">$</span> fsh pitch --2026
+              </p>
               <h1>
-                Tu arquitectura técnica
-                <br className="desktop-break" /> ya es fuerte.
-                <br />
-                <span className="gradient-text">
-                  Ahora fortalece tu
-                  <br className="desktop-break" /> arquitectura humana.
+                Tu arquitectura técnica ya es fuerte.{" "}
+                <span className="accent-mint">
+                  Ahora fortalece tu arquitectura humana.
                 </span>
               </h1>
-              <p className="hero-description">
-                La plataforma de entrenamiento personalizado de habilidades
-                blandas para builders en Web3, basada en evidencia científica{" "}
-                <strong>(BESSI + Big Five)</strong> y certificada On-Chain en
-                Stellar.
+              <p className="lead">
+                Full Stack Human es un hub de entrenamiento personalizado de
+                habilidades blandas para builders en blockchain y Web3:
+                sesiones 1 a 1 en vivo con psicólogas y psicólogos, adaptadas a
+                tu personalidad.
               </p>
               <div className="hero-actions">
-                <a href="#modulos" className="button button-primary">
-                  Explorar Módulos
-                  <ArrowRight size={17} />
+                <a href="/app" className="button button-primary">
+                  Haz el Human Stack Check
+                  <ArrowRight size={18} />
                 </a>
-                <a href="#certificacion" className="button button-secondary">
-                  <ShieldCheck size={17} />
-                  Ver Certificación en Stellar
+                <a href="#metodologia" className="button button-secondary">
+                  Ver metodología
                 </a>
               </div>
-              <div className="hero-proof">
-                <span>
-                  <Check size={13} /> Basado en ciencia
-                </span>
-                <span>
-                  <Check size={13} /> Diseñado para builders
-                </span>
-                <span>
-                  <Check size={13} /> Human-first
-                </span>
-              </div>
+              <ul className="hero-proof">
+                <li>
+                  <Check size={16} /> Medido con BESSI
+                </li>
+                <li>
+                  <Check size={16} /> Adaptado con Big Five
+                </li>
+                <li>
+                  <Check size={16} /> Escrow y credencial en Stellar
+                </li>
+              </ul>
             </div>
             <HumanCore />
           </div>
-          <div className="container hero-bottom">
-            <span>EL SIGUIENTE NIVEL NO ESTÁ SOLO EN TU CÓDIGO.</span>
-            <a
-              href="#impacto"
-              aria-label="Descubrir el impacto de las habilidades blandas"
-            >
-              <ArrowDown size={17} />
-            </a>
-            <span>ESTÁ EN TI.</span>
-          </div>
         </section>
 
-        <div className="ecosystem-strip">
-          <div className="container ecosystem-inner">
-            <span className="ecosystem-caption">
-              HABILIDADES HUMANAS.
-              <br />
-              <strong>INFRAESTRUCTURA WEB3.</strong>
-            </span>
-            <span className="ecosystem-wordmark">
-              <Orbit />
-              Stellar
-            </span>
-            <span className="ecosystem-wordmark soroban">
-              <Blocks />
-              soroban
-            </span>
-            <span className="ecosystem-wordmark acta">
-              <Layers3 />
-              ACTA<span className="protocol-label">PROTOCOL</span>
-            </span>
-            <span className="ecosystem-research">
-              <Fingerprint />
-              BESSI <span>+</span> Big Five
-            </span>
-          </div>
-        </div>
-
-        <section id="impacto" className="section impact-section">
+        <section id="problema" className="section">
           <div className="container">
-            <div className="section-heading heading-split">
+            <div className="section-heading split">
               <div>
-                <SectionLabel number="01">EL FACTOR HUMANO</SectionLabel>
+                <SectionLabel number="01">EL PROBLEMA</SectionLabel>
                 <h2>
-                  El costo real de ignorar las
-                  <br className="desktop-break" /> habilidades blandas en Web3
-                  <span className="coral">.</span>
+                  El bug no está <span className="accent-coral">en el código.</span>
                 </h2>
               </div>
-              <p>
-                Un código impecable no lo resuelve todo.
-                <br />
-                Las habilidades humanas marcan la diferencia
-                <br className="desktop-break" /> entre construir y generar
-                impacto.
+              <p className="lead">
+                Proyectos técnicamente brillantes se frenan por comunicación
+                ineficaz, silos, burnout y pitches que no convencen. Esa capa
+                casi nunca se mide ni se entrena.
               </p>
             </div>
             <div className="metrics-grid">
-              <article className="metric-card">
-                <div className="metric-top">
-                  <span className="small-icon coral">
-                    <TriangleAlert size={19} />
-                  </span>
-                  <span>01 / EJECUCIÓN</span>
-                </div>
-                <p className="metric-value">
-                  68% <span>–</span> 84<span className="metric-unit">%</span>
-                </p>
-                <p>
-                  Proyectos de software con retrasos masivos o fallos por{" "}
-                  <strong>problemas no-técnicos.</strong>
-                </p>
-                <div className="metric-source">
-                  <span className="source-line" />
-                  CHAOS Report
-                </div>
-              </article>
-              <article className="metric-card">
-                <div className="metric-top">
-                  <span className="small-icon cyan">
-                    <TrendingUp size={19} />
-                  </span>
-                  <span>02 / COMUNICACIÓN</span>
-                </div>
-                <p className="metric-value">
-                  <span className="currency">USD</span> $75
-                  <span className="metric-unit">M</span>
-                </p>
-                <p>
-                  Pérdidas directas por <strong>comunicación ineficaz</strong>{" "}
-                  por cada $1,000M invertidos.
-                </p>
-                <div className="metric-source">
-                  <span className="source-line" />
-                  Project Management Institute
-                </div>
-              </article>
-              <article className="metric-card metric-positive">
-                <div className="metric-top">
-                  <span className="small-icon mint">
-                    <Mic2 size={19} />
-                  </span>
-                  <span>03 / OPORTUNIDAD</span>
-                </div>
-                <p className="metric-value">
-                  +10% <span>a</span> 27<span className="metric-unit">%</span>
-                </p>
-                <p>
-                  Incremento en la probabilidad de financiamiento en pitches al
-                  proyectar <strong>confianza y entusiasmo vocal.</strong>
-                </p>
-                <div className="metric-source">
-                  <span className="source-line" />
-                  HBR / Figge et al.
-                </div>
-              </article>
+              {evidence.map((item) => (
+                <article key={item.id} className={`card metric ${item.color}`}>
+                  <p className="mono-label">
+                    <item.icon size={16} aria-hidden="true" />
+                    {item.label}
+                  </p>
+                  <p className="metric-value">
+                    {item.value}
+                    <span className="metric-unit">{item.unit}</span>
+                  </p>
+                  <p>{item.text}</p>
+                  <Source>{item.source}</Source>
+                </article>
+              ))}
             </div>
-            <p className="impact-note">
-              <span className="status-dot" />
-              Tu ventaja competitiva también es humana.
-            </p>
+            <div className="why-now card">
+              <p className="mono-label">
+                <span className="status-dot amber" />
+                POR QUÉ AHORA
+              </p>
+              <p>
+                <strong>El 63 %</strong> de los empleadores considera la brecha
+                de habilidades la principal barrera para transformar su negocio,
+                y <strong>el 85 %</strong> planea priorizar el upskilling de su
+                plantilla. Tras el pensamiento analítico, las más valoradas son
+                la resiliencia, flexibilidad y agilidad, y el liderazgo e
+                influencia social.
+              </p>
+              <Source>World Economic Forum, 2025 · The Future of Jobs Report</Source>
+            </div>
           </div>
         </section>
 
-        <section id="metodologia" className="section methodology-section">
+        <section id="metodologia" className="section section-deep">
           <div className="container">
             <div className="section-heading centered">
-              <SectionLabel number="02">
-                CIENCIA DETRÁS DE TU EVOLUCIÓN
-              </SectionLabel>
+              <SectionLabel number="02">LA SOLUCIÓN</SectionLabel>
               <h2>
-                De Dev Full Stack a{" "}
-                <span className="gradient-text">Full Stack Human.</span>
+                32 habilidades. 5 capas.{" "}
+                <span className="accent-mint">1 diagnóstico.</span>
               </h2>
-              <p>
-                Así como construyes un backend sólido y un frontend intuitivo,
-                <br className="desktop-break" /> te ayudamos a construir tu
-                arquitectura humana.
+              <p className="lead">
+                Entrena habilidades humanas como entrenas tu stack: con método.
+                Durante años, «habilidades blandas» fue un término difuso. El
+                BESSI lo convierte en un inventario con estructura clara.
               </p>
             </div>
-            <div className="methodology-workspace">
+
+            <div className="trait-skill">
+              <div className="card">
+                <p className="mono-label">RASGO · BIG FIVE</p>
+                <h3>Lo que sueles hacer.</h3>
+                <p>Tu tendencia habitual de pensar, sentir y actuar.</p>
+              </div>
+              <div className="card mint">
+                <p className="mono-label">HABILIDAD · BESSI</p>
+                <h3>Lo que eres capaz de hacer cuando la situación lo pide.</h3>
+                <p>Se puede medir. Se puede entrenar.</p>
+              </div>
+            </div>
+
+            <div className="workspace">
               <div className="workspace-top">
-                <div className="window-dots">
+                <span className="window-dots" aria-hidden="true">
                   <i />
                   <i />
                   <i />
-                </div>
-                <span>human_architecture.config</span>
-                <span className="workspace-status">
-                  <span className="status-dot" /> BESSI FRAMEWORK
+                </span>
+                <span className="mono-label">
+                  <span className="prompt">$</span> fsh diagnose --bessi
                 </span>
               </div>
               <div
                 className="domain-tabs"
                 role="tablist"
-                aria-label="Los cinco dominios BESSI"
+                aria-label="Las cinco capas FSH (dominios BESSI)"
               >
                 {domains.map((item, index) => (
                   <button
@@ -472,13 +292,15 @@ export default function App() {
                     role="tab"
                     aria-selected={activeDomain === index}
                     aria-controls={`panel-${index}`}
+                    aria-label={`${item.layer} ${item.name}`}
                     tabIndex={activeDomain === index ? 0 : -1}
-                    className={activeDomain === index ? "active" : ""}
+                    className={`${item.color}${activeDomain === index ? " active" : ""}`}
                     onClick={() => setActiveDomain(index)}
                     onKeyDown={(event) => handleTabKey(event, index)}
                   >
-                    <item.icon size={19} />
-                    <span>{item.name}</span>
+                    <item.icon size={20} aria-hidden="true" />
+                    <span className="tab-layer">{item.layer}</span>
+                    <span className="tab-domain">{item.name}</span>
                   </button>
                 ))}
               </div>
@@ -487,274 +309,269 @@ export default function App() {
                 aria-labelledby={`tab-${activeDomain}`}
                 role="tabpanel"
                 tabIndex={0}
-                className="domain-panel"
+                className={`domain-panel ${domain.color}`}
               >
-                <div
-                  className={`domain-diagram ${domain.color}`}
-                  aria-hidden="true"
-                >
-                  <div className="diagram-ring ring-one" />
-                  <div className="diagram-ring ring-two" />
-                  <div className="diagram-ring ring-three" />
-                  <div className="diagram-center">
-                    <domain.icon size={47} strokeWidth={1.3} />
-                  </div>
-                  <span className="diagram-point point-one" />
-                  <span className="diagram-point point-two" />
-                  <span className="diagram-point point-three" />
-                  <span className="diagram-caption">
-                    {domain.code}.activate()
-                  </span>
-                </div>
                 <div className="domain-content">
-                  <span className="domain-kicker">
-                    DOMINIO {String(activeDomain + 1).padStart(2, "0")} / 05
-                  </span>
+                  <p className="mono-label domain-kicker">
+                    <span className="layer-tag">{domain.layer}</span>
+                    {domain.name} · {domain.skills.length} habilidades
+                  </p>
                   <h3>{domain.title}</h3>
                   <p>{domain.description}</p>
-                  <div className="skill-tags">
-                    {domain.skills.map((skill) => (
-                      <span key={skill}>
-                        <Check size={12} />
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
                 </div>
+                <ul className="skill-list">
+                  {domain.skills.map((skill) => (
+                    <li key={skill}>
+                      <span className="bracket open">&lt;</span>
+                      {skill}
+                      <span className="bracket close">&gt;</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="personalization">
-                <span className="personalization-icon">
-                  <Fingerprint size={28} />
+              <p className="workspace-note mono-label">
+                +3 transversales: {transversalSkills.join(" · ")}
+              </p>
+            </div>
+
+            <div className="bessi-facts">
+              {bessiFacts.map((fact) => (
+                <div key={fact.label}>
+                  <span className="fact-value">{fact.value}</span>
+                  <span className="mono-label">{fact.label}</span>
+                </div>
+              ))}
+              <p>
+                El BESSI se publicó en el <em>Journal of Personality and Social
+                Psychology</em>, revista con revisión por pares de la APA.
+                Adaptación al español validada en adultos. Entrenable: con retos
+                conductuales semanales durante 16 semanas, mejoraron 4 de los 5
+                dominios.
+                <Source>
+                  Soto et al., 2022, 2024, 2025; Postigo et al., 2024; Chen et
+                  al., 2024
+                </Source>
+              </p>
+            </div>
+
+            <div className="personalization card">
+              <div className="personalization-head">
+                <span className="icon-box coral">
+                  <Fingerprint size={24} aria-hidden="true" />
                 </span>
                 <div>
-                  <h4>
-                    Tu personalidad es el punto de partida.{" "}
-                    <span>No algo que cambiar.</span>
-                  </h4>
+                  <p className="mono-label">PERSONALIZACIÓN</p>
+                  <h3>El BESSI dice qué entrenar. El Big Five, cómo.</h3>
                   <p>
-                    Entrenamiento personalizado según tu personalidad Big Five
-                    (OCEAN). Te enseñamos herramientas operativas adaptadas a
-                    tus fortalezas, sin cambiar quién eres.
+                    En la sesión 1 se aplican ambos para calibrar ritmo, tipo de
+                    práctica y feedback. Ejemplos ilustrativos:
                   </p>
                 </div>
-                <span className="ocean-label">O · C · E · A · N</span>
               </div>
+              <dl className="trait-grid">
+                {bigFiveExamples.map((example) => (
+                  <div key={example.trait}>
+                    <dt>{example.trait}</dt>
+                    <dd>{example.text}</dd>
+                  </div>
+                ))}
+              </dl>
+              <Source>
+                Colquitt et al., 2000; Barrick y Mount, 1991; Joyal-Desmarais
+                et al., 2022
+              </Source>
             </div>
           </div>
         </section>
 
-        <section id="modulos" className="section modules-section">
+        <section id="modulos" className="section">
           <div className="container">
-            <div className="section-heading heading-split">
+            <div className="section-heading split">
               <div>
-                <SectionLabel number="03">
-                  MENOS TEORÍA. MÁS TRANSFORMACIÓN.
-                </SectionLabel>
+                <SectionLabel number="03">EL CATÁLOGO</SectionLabel>
                 <h2>
-                  Un upgrade humano.
-                  <br />
-                  Impacto en cada build.
+                  Entrena una habilidad.{" "}
+                  <span className="accent-mint">1 a 1, en vivo.</span>
                 </h2>
               </div>
-              <div className="modules-intro">
-                <p>
-                  Tres módulos para los desafíos que ya estás viviendo.
-                  <br />
-                  Entrenamiento práctico. Acompañamiento real.
-                </p>
-                <span className="availability">
-                  <span className="status-dot" /> Módulos iniciales · MVP
-                </span>
-              </div>
+              <p className="lead">
+                Módulos de unas 5 sesiones, uno por habilidad. No es un curso
+                pregrabado ni una clase teórica: práctica aplicada a tu trabajo
+                real, con una psicóloga o psicólogo del equipo.
+              </p>
             </div>
             <div className="modules-grid">
-              {modules.map((module, index) => (
-                <article
-                  key={module.id}
-                  className={`module-card ${module.color}`}
-                >
-                  <div className="module-visual">
-                    <span className="module-number">MÓDULO_{module.id}</span>
-                    <div className="module-art-ring">
-                      <module.icon size={53} strokeWidth={1.1} />
-                    </div>
-                    <div className="module-art-orbit" />
-                    <span className="module-visual-label">
-                      {index === 0
-                        ? "MAKE YOUR IDEAS HEARD"
-                        : index === 1
-                          ? "BUILD WITHOUT BURNING OUT"
-                          : "BETTER TOGETHER"}
+              {modules.map((module) => (
+                <article key={module.id} className={`card module ${module.color}`}>
+                  <div className="module-head">
+                    <span className="icon-box">
+                      <module.icon size={24} aria-hidden="true" />
                     </span>
-                    <span className="module-cross">+</span>
-                  </div>
-                  <div className="module-body">
-                    <span className="domain-pill">
-                      <span />
+                    <p className="mono-label">
+                      <span className="layer-tag">{module.layer}</span>
                       {module.domain}
-                    </span>
-                    <h3>{module.title}</h3>
-                    <p>{module.short}</p>
-                    <div className="module-format">
-                      <UsersRound size={13} /> Sesión con entrenadora
-                      <span>·</span>
-                      <BookOpen size={13} /> Práctico
-                    </div>
-                    <button
-                      onClick={() => setModal({ type: "booking", index })}
-                      className="module-button"
-                    >
-                      Agendar Sesión con Entrenadora
-                      <ArrowUpRight size={16} />
-                    </button>
+                    </p>
                   </div>
+                  <h3>
+                    <span className="bracket open">&lt;</span>
+                    {module.title}
+                    <span className="bracket close">&gt;</span>
+                  </h3>
+                  <p className="module-definition">{module.definition}</p>
+                  <p>{module.short}</p>
+                  <p className="module-meta mono-label">
+                    <Users size={16} aria-hidden="true" />
+                    {module.psychologist} · Psicóloga
+                    <span aria-hidden="true">·</span>
+                    ~5 sesiones · 45 min
+                  </p>
+                  <a
+                    className="button button-secondary w-full"
+                    href={`/app#/modulo/${module.id}`}
+                  >
+                    Agenda tu sesión 1
+                    <ArrowRight size={18} />
+                  </a>
                 </article>
               ))}
             </div>
-            <p className="modules-footnote">
-              <Sparkles size={14} />
-              No necesitas ser otra persona. Necesitas nuevas herramientas.
+            <p className="modules-note mono-label">
+              <span className="layer-tag coral">API</span>
+              <span className="layer-tag lime">Fork</span>
+              Próximas capas: el equipo de psicología está diseñando sus
+              habilidades.
             </p>
           </div>
         </section>
 
-        <section id="certificacion" className="section certification-section">
+        <section id="como-funciona" className="section section-deep">
           <div className="container">
-            <div className="certification-layout grid-background">
-              <div className="certification-copy">
-                <SectionLabel number="04">
-                  TU CRECIMIENTO, VERIFICABLE
-                </SectionLabel>
-                <h2>
-                  Acreditación On-Chain
-                  <br />
-                  en <span className="gradient-text">Stellar.</span>
-                </h2>
-                <p>
-                  Tu evolución merece más que un PDF. Credenciales verificables
-                  no-custodias construidas con contratos inteligentes en Soroban
-                  mediante el protocolo ACTA. Prueba inmutable de tus
-                  habilidades conductuales.
-                </p>
-                <div className="credential-features">
-                  <span>
-                    <Wallet size={17} />
-                    Tu credencial, bajo tu control
+            <div className="section-heading centered">
+              <SectionLabel number="04">CÓMO FUNCIONA</SectionLabel>
+              <h2>
+                Del test a la credencial,{" "}
+                <span className="accent-mint">en seis pasos.</span>
+              </h2>
+            </div>
+            <ol className="steps-grid">
+              {steps.map((step, index) => (
+                <li key={step.title} className="card step">
+                  <span className="step-number mono-label">
+                    0{index + 1}
                   </span>
-                  <span>
-                    <ShieldCheck size={17} />
-                    Verificable, transparente e inmutable
-                  </span>
-                  <span>
-                    <Network size={17} />
-                    Construida para el ecosistema Web3
-                  </span>
-                </div>
+                  <step.icon size={24} aria-hidden="true" />
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </li>
+              ))}
+            </ol>
+
+            <div className="trust-layout">
+              <div className="trust-copy">
+                <p className="mono-label">CONFIANZA · ESCROW EN BLOCKCHAIN</p>
+                <h3>Tu pago se libera solo cuando la sesión ocurre.</h3>
+                <ol className="escrow-steps">
+                  {escrowSteps.map((step, index) => (
+                    <li key={step.text}>
+                      <span className="mono-label">0{index + 1}</span>
+                      <step.icon size={20} aria-hidden="true" />
+                      {step.text}
+                    </li>
+                  ))}
+                </ol>
+                <p>Pagas solo el entrenamiento que ocurre. Sin letra chica.</p>
                 <button
                   className="text-link"
                   onClick={() => setModal({ type: "credential" })}
                 >
                   Explorar la credencial
-                  <ArrowRight size={17} />
+                  <ArrowRight size={18} />
                 </button>
               </div>
-              <div className="credential-showcase">
-                <div className="credential-back" />
-                <div className="credential-card">
-                  <div className="credential-card-top">
-                    <span>
-                      <FshSymbol size={22} /> Full Stack Human
-                    </span>
-                    <span className="credential-example">VISTA PREVIA</span>
-                  </div>
-                  <div className="credential-medallion">
-                    <div />
-                    <ShieldCheck size={47} strokeWidth={1.2} />
-                    <span className="medallion-star star-one">✧</span>
-                    <span className="medallion-star star-two">✧</span>
-                  </div>
-                  <p className="credential-eyebrow">VERIFIABLE HUMAN SKILLS</p>
-                  <h3>Full Stack Human</h3>
-                  <p className="credential-skill">Compromiso Social</p>
-                  <div className="credential-divider" />
-                  <div className="credential-details">
-                    <span>
-                      ESTÁNDAR<strong>Verifiable Credential</strong>
-                    </span>
-                    <span>
-                      INFRAESTRUCTURA<strong>Stellar · Soroban</strong>
-                    </span>
-                  </div>
-                  <div className="credential-footer">
-                    <span>
-                      <Layers3 size={13} /> Powered by ACTA
-                    </span>
-                    <Fingerprint size={26} />
-                  </div>
+              <figure className="credential amber">
+                <figcaption className="mono-label">
+                  CREDENCIAL VERIFICABLE · EJEMPLO
+                </figcaption>
+                <div className="credential-ring" aria-hidden="true">
+                  <FshSymbol size={44} />
                 </div>
-                <span className="credential-caption">
-                  <LockKeyhole size={12} /> Diseño de credencial · integración
-                  en desarrollo
-                </span>
-              </div>
+                <p>Se certifica que [Nombre de la persona] completó</p>
+                <p className="credential-skill">
+                  <span className="bracket open">&lt;</span>
+                  Regulación del estrés
+                  <span className="bracket close">&gt;</span>
+                </p>
+                <p className="mono-label">
+                  <span className="layer-tag">Firewall</span>
+                  RESILIENCIA EMOCIONAL
+                </p>
+                <p className="credential-verified mono-label">
+                  <BadgeCheck size={16} aria-hidden="true" /> VERIFICADO EN
+                  BLOCKCHAIN
+                  <Link2 size={14} aria-hidden="true" />
+                </p>
+                <p className="credential-method">
+                  Metodología: BESSI (Soto et al., 2022; Postigo et al., 2024)
+                </p>
+              </figure>
             </div>
+            <p className="centered-note">
+              Se reclama al confirmar la última sesión y no se pierde nunca: la
+              prueba pública de lo entrenado. Sin niveles.
+            </p>
           </div>
         </section>
 
-        <section id="entrenadoras" className="section trainers-section">
-          <div className="container trainers-layout">
-            <div className="trainers-copy">
-              <SectionLabel number="05">HUMANAS, COMO TÚ</SectionLabel>
-              <h2>
-                Detrás de tu evolución,
-                <br />
-                <span className="gradient-text">personas reales.</span>
-              </h2>
-              <h3>Nuestras Entrenadoras de Habilidades Blandas</h3>
-              <p>
-                Psicólogas expertas en aprendizaje experiencial y facilitación
-                conductual para entornos tech. Un espacio para practicar,
-                equivocarte y crecer con acompañamiento.
+        <section id="equipo" className="section">
+          <div className="container">
+            <div className="section-heading split">
+              <div>
+                <SectionLabel number="05">POR QUÉ NOSOTROS</SectionLabel>
+                <h2>
+                  Psicología con{" "}
+                  <span className="accent-coral">idioma de builder.</span>
+                </h2>
+              </div>
+              <p className="lead">
+                Psicólogas y psicólogos que entienden grants, equipos remotos,
+                hackathons y la velocidad de Web3.
               </p>
-              <a href="#modulos" className="text-link">
-                Encuentra tu próximo módulo
-                <ArrowRight size={16} />
-              </a>
             </div>
-            <div className="trainer-values">
-              {trainerValues.map((value, index) => (
-                <div key={value.title} className="trainer-value">
-                  <span className="trainer-value-icon">
-                    <value.icon size={24} strokeWidth={1.5} />
-                  </span>
-                  <div>
-                    <h4>{value.title}</h4>
-                    <p>{value.description}</p>
-                  </div>
-                  <span className="trainer-value-number">0{index + 1}</span>
-                </div>
+            <div className="why-grid">
+              {whyUs.map((item, index) => (
+                <article key={item.title} className="card why">
+                  <span className="mono-label">0{index + 1}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="final-cta">
+        <section className="final-cta fsh-blueprint">
           <div className="container">
-            <div className="cta-glow" />
-            <span className="cta-code">
-              <Code2 size={19} /> BUILD BETTER. BE HUMAN.
-            </span>
-            <h2>
-              El futuro lo construyes tú.
-              <br />
-              <span className="gradient-text">Con todas tus habilidades.</span>
-            </h2>
-            <p>Tu siguiente gran versión empieza por lo humano.</p>
-            <a className="button button-primary" href="/app">
-              Comenzar mi evolución
-              <ArrowRight size={18} />
-            </a>
-            <span className="cta-bottom">PARA BUILDERS. POR HUMANOS.</span>
+            <p className="terminal-label">
+              <span className="prompt">$</span> medir --bessi › personalizar
+              --big-five › entrenar --1a1 › certificar --blockchain
+            </p>
+            <h2>Refactoriza tu arquitectura humana.</h2>
+            <div className="hero-actions centered">
+              <a className="button button-primary" href="/app">
+                Haz el Human Stack Check
+                <ArrowRight size={18} />
+              </a>
+              <a
+                className="button button-human"
+                href={`${repository}/issues/new?title=Entrenar%20a%20mi%20equipo`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Entrena a tu equipo
+                <ArrowUpRight size={18} />
+              </a>
+            </div>
+            <p className="mono-label">GRATIS · 1 MINUTO · SIN TARJETA</p>
           </div>
         </section>
       </main>
@@ -763,39 +580,38 @@ export default function App() {
         <div className="container">
           <div className="footer-top">
             <div>
-              <Brand footer />
-              <p>Strong code. Stronger humans.</p>
+              <img
+                className="footer-logo"
+                src="/brand/fsh-horizontal-color-dark.svg"
+                alt="Full Stack Human"
+                width={236}
+                height={32}
+              />
+              <p>Evidencia, no humo.</p>
             </div>
             <nav aria-label="Enlaces del pie de página">
               <a href={repository} target="_blank" rel="noreferrer">
-                <Code2 size={15} />
                 GitHub
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={14} />
               </a>
               <a href="https://stellar.org" target="_blank" rel="noreferrer">
                 Stellar Network
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={14} />
               </a>
               <button onClick={() => setModal({ type: "terms" })}>
                 Términos
               </button>
-              <a
-                href={`${repository}/issues/new?title=Contacto%20FSH%20Hub`}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={contactUrl} target="_blank" rel="noreferrer">
                 Contacto
-                <ArrowUpRight size={13} />
+                <ArrowUpRight size={14} />
               </a>
             </nav>
           </div>
-          <div className="footer-bottom">
+          <div className="footer-bottom mono-label">
+            <span>© {new Date().getFullYear()} Full Stack Human</span>
             <span>
-              © {new Date().getFullYear()} Full Stack Human · FSH Hub
-            </span>
-            <span>
-              Hecho para la próxima generación de builders
-              <span className="status-dot" />
+              Toda cifra tiene fuente primaria auditada · fullstackhuman.io
+              (provisional)
             </span>
           </div>
         </div>
@@ -804,55 +620,57 @@ export default function App() {
       {modal && (
         <Modal
           title={
-            modal.type === "booking"
-              ? "Tu siguiente upgrade empieza aquí."
-              : modal.type === "credential"
-                ? "Una credencial que te pertenece."
-                : "Términos y privacidad"
+            modal.type === "credential"
+              ? "Una credencial que te pertenece."
+              : "Términos y privacidad"
           }
           onClose={() => setModal(null)}
         >
-          {modal.type === "booking" && <BookingForm index={modal.index} />}
           {modal.type === "credential" && (
             <div className="credential-modal">
               <p>
-                La propuesta de FSH Hub es acreditar las habilidades entrenadas
-                con credenciales verificables mediante ACTA, contratos Soroban y
-                la red Stellar.
+                Al confirmar la última sesión reclamas una credencial verificable
+                en Stellar: habilidad, capa, emisor y el registro on-chain de la
+                sesión completada.
               </p>
               <ol>
                 <li>
-                  <GraduationCap />
+                  <Users />
                   <div>
-                    <strong>Entrena una habilidad</strong>
+                    <strong>Entrenas 1 a 1</strong>
                     <span>
-                      Participa en una sesión y practica con feedback.
+                      Sesiones en vivo con práctica aplicada a tu trabajo.
                     </span>
                   </div>
                 </li>
                 <li>
-                  <CheckCheck />
+                  <ShieldCheck />
                   <div>
-                    <strong>Demuestra tu aprendizaje</strong>
-                    <span>La evaluación conductual acompaña tu progreso.</span>
+                    <strong>El pago espera en escrow</strong>
+                    <span>
+                      Un contrato inteligente lo retiene y lo libera al
+                      confirmar la sesión.
+                    </span>
                   </div>
                 </li>
                 <li>
-                  <Wallet />
+                  <BadgeCheck />
                   <div>
-                    <strong>Conserva tu credencial</strong>
+                    <strong>Reclamas tu credencial</strong>
                     <span>
-                      El diseño contempla una acreditación bajo tu control.
+                      Verificable en blockchain, con enlace al registro. Sin
+                      niveles.
                     </span>
                   </div>
                 </li>
               </ol>
               <div className="info-box">
-                <ShieldCheck size={21} />
+                <ShieldCheck size={22} aria-hidden="true" />
                 <p>
-                  <strong>Vista previa de producto</strong>La integración
-                  ACTA/Soroban está en desarrollo. Esta página no conecta
-                  wallets, emite credenciales ni registra transacciones.
+                  <strong>Estado del MVP</strong>La plataforma funciona en
+                  Stellar Testnet: escrow con Trustless Work y credencial
+                  anclada a la transacción de liberación. La emisión como
+                  credencial verificable (ACTA) está en desarrollo.
                 </p>
               </div>
               <a
@@ -870,31 +688,24 @@ export default function App() {
             <div className="terms-content">
               <h3>Sobre esta página</h3>
               <p>
-                FSH Hub presenta una propuesta de entrenamiento de habilidades
-                blandas para builders Web3. Los módulos y la credencial ilustran
-                el producto inicial; esta página no procesa pagos ni ofrece
-                certificaciones activas.
-              </p>
-              <h3>Solicitudes de sesión</h3>
-              <p>
-                El formulario prepara una solicitud que puedes publicar en
-                GitHub. Proponer un horario no confirma una reserva. Los issues
-                son públicos: no incluyas datos personales, información de salud
-                ni datos de tu wallet.
+                Full Stack Human presenta un hub de entrenamiento de habilidades
+                blandas para builders Web3. La plataforma en /app opera en
+                Stellar Testnet como MVP: los pagos usan USDC de prueba y las
+                credenciales son demostrativas.
               </p>
               <h3>Privacidad</h3>
               <p>
-                No guardamos los datos del formulario ni usamos cookies de
-                seguimiento propias. Las tipografías se cargan desde Google
-                Fonts. Los enlaces externos están sujetos a las políticas de sus
-                proveedores.
+                Esta página no guarda datos ni usa cookies de seguimiento. En la
+                plataforma, la identidad y la wallet las gestiona Pollar; el
+                resto de tu progreso se guarda solo en tu navegador.
               </p>
               <h3>Alcance del contenido</h3>
               <p>
                 El entrenamiento es educativo y no sustituye atención
-                psicológica o clínica. Las cifras de impacto son referencias
-                proporcionadas para esta presentación; no constituyen una
-                promesa de resultados individuales.
+                psicológica o clínica. Toda cifra publicada proviene de una
+                fuente primaria auditada (autor y año visibles) y describe
+                asociaciones observadas, no garantías de resultados
+                individuales.
               </p>
               <a
                 className="text-link"
