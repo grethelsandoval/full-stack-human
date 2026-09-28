@@ -17,7 +17,7 @@ export const domains = [
   {
     name: "Autogestión",
     icon: Target,
-    color: "blue",
+    color: "cyan",
     title: "Tu mejor sistema operativo eres tú.",
     description:
       "Convierte tus objetivos en acciones sostenibles. Entrena tu organización, enfoque y capacidad de ejecución para avanzar sin depender de la motivación.",
@@ -31,7 +31,7 @@ export const domains = [
   {
     name: "Resiliencia Emocional",
     icon: ShieldCheck,
-    color: "mint",
+    color: "amber",
     title: "La presión cambia. Tu equilibrio se entrena.",
     description:
       "Aprende a regular tus emociones y responder con claridad cuando el deploy falla, el deadline se acerca o la incertidumbre aumenta.",
@@ -45,7 +45,7 @@ export const domains = [
   {
     name: "Compromiso Social",
     icon: MessagesSquare,
-    color: "violet",
+    color: "coral",
     title: "Haz que tus ideas conecten.",
     description:
       "Comunica el valor de lo que construyes. Desarrolla la confianza para presentar, liderar conversaciones y crear conexiones en tu ecosistema.",
@@ -73,7 +73,7 @@ export const domains = [
   {
     name: "Innovación",
     icon: Lightbulb,
-    color: "violet",
+    color: "lime",
     title: "Abre espacio para tu próxima gran idea.",
     description:
       "Entrena tu curiosidad, explora nuevas perspectivas y conecta ideas. Aprende a navegar la ambigüedad para diseñar soluciones que importan.",
@@ -90,7 +90,7 @@ export const modules = [
   {
     id: "01",
     domain: "Compromiso Social",
-    color: "violet",
+    color: "coral",
     icon: Mic2,
     title: "Pitches & Argumentación Persuasiva para Grants y VCs",
     short:
@@ -101,7 +101,7 @@ export const modules = [
   {
     id: "02",
     domain: "Resiliencia Emocional",
-    color: "blue",
+    color: "amber",
     icon: Brain,
     title:
       "Gestión del Estrés y Prevención de Burnout en Mainnets & Hackathons",

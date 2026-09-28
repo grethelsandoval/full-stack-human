@@ -25,13 +25,13 @@ export default function HumanCore() {
             y2="440"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stopColor="#60a5fa" />
-            <stop offset=".48" stopColor="#a78bfa" />
-            <stop offset="1" stopColor="#6d28d9" />
+            <stop stopColor="#60defa" />
+            <stop offset=".48" stopColor="#8be6fa" />
+            <stop offset="1" stopColor="#28b9d9" />
           </linearGradient>
           <radialGradient id="sphere">
-            <stop stopColor="#8b5cf6" stopOpacity=".15" />
-            <stop offset="1" stopColor="#8b5cf6" stopOpacity=".025" />
+            <stop stopColor="#5cdaf6" stopOpacity=".15" />
+            <stop offset="1" stopColor="#5cdaf6" stopOpacity=".025" />
           </radialGradient>
         </defs>
         <circle
@@ -98,12 +98,12 @@ export default function HumanCore() {
           stroke="#8793b4"
           strokeOpacity=".5"
         />
-        <circle cx="455" cy="145" r="5" fill="#a78bfa" />
-        <circle cx="455" cy="145" r="11" stroke="#a78bfa" strokeOpacity=".2" />
-        <circle cx="83" cy="386" r="4" fill="#60a5fa" />
-        <circle cx="365" cy="428" r="3" fill="#34d399" />
-        <circle cx="151" cy="167" r="3" fill="#c4b5fd" />
-        <circle cx="390" cy="322" r="3" fill="#c4b5fd" />
+        <circle cx="455" cy="145" r="5" fill="#8be6fa" />
+        <circle cx="455" cy="145" r="11" stroke="#8be6fa" strokeOpacity=".2" />
+        <circle cx="83" cy="386" r="4" fill="#60defa" />
+        <circle cx="365" cy="428" r="3" fill="#34d39e" />
+        <circle cx="151" cy="167" r="3" fill="#b5f0fd" />
+        <circle cx="390" cy="322" r="3" fill="#b5f0fd" />
       </svg>
       <div className="core-identity">
         <Fingerprint size={112} strokeWidth={1} />

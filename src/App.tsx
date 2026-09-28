@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   Blocks,
   BookOpen,
-  Braces,
   Check,
   CheckCheck,
   ChevronRight,
@@ -28,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import HumanCore from "./HumanCore";
+import { FshSymbol } from "./brand/Logo";
 import Modal from "./Modal";
 import { domains, modules, repository, trainerValues } from "./data";
 
@@ -39,14 +39,13 @@ type ModalState =
 
 function Brand({ footer = false }: { footer?: boolean }) {
   return (
-    <a href="#inicio" className="brand" aria-label="FSH Hub — inicio">
+    <a href="#inicio" className="brand" aria-label="Full Stack Human — inicio">
       <span className="brand-icon">
-        <Braces size={32} strokeWidth={1.6} />
-        <span />
+        <FshSymbol size={34} />
       </span>
       <span>
-        fsh<span className="brand-divider">/</span>hub
-        {footer && <small>FULL STACK HUMAN</small>}
+        Full Stack Human
+        {footer && <small>FSH HUB · HABILIDADES BLANDAS</small>}
       </span>
     </a>
   );
@@ -352,7 +351,7 @@ export default function App() {
                 <h2>
                   El costo real de ignorar las
                   <br className="desktop-break" /> habilidades blandas en Web3
-                  <span className="text-violet-400">.</span>
+                  <span className="coral">.</span>
                 </h2>
               </div>
               <p>
@@ -366,7 +365,7 @@ export default function App() {
             <div className="metrics-grid">
               <article className="metric-card">
                 <div className="metric-top">
-                  <span className="small-icon violet">
+                  <span className="small-icon coral">
                     <TriangleAlert size={19} />
                   </span>
                   <span>01 / EJECUCIÓN</span>
@@ -385,7 +384,7 @@ export default function App() {
               </article>
               <article className="metric-card">
                 <div className="metric-top">
-                  <span className="small-icon blue">
+                  <span className="small-icon cyan">
                     <TrendingUp size={19} />
                   </span>
                   <span>02 / COMUNICACIÓN</span>
@@ -664,7 +663,7 @@ export default function App() {
                 <div className="credential-card">
                   <div className="credential-card-top">
                     <span>
-                      <Braces size={21} /> fsh/hub
+                      <FshSymbol size={22} /> Full Stack Human
                     </span>
                     <span className="credential-example">VISTA PREVIA</span>
                   </div>

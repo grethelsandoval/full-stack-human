@@ -1,0 +1,90 @@
+/* Tokens del manual de marca FSH · V1.0 */
+:root {
+  --fsh-midnight: #0a0f1e;
+  --fsh-deep: #111a2e;
+  --fsh-raised: #1b2640;
+  --fsh-line: #24304a;
+  --fsh-mist: #e7ecf4;
+  --fsh-fog: #94a3bd;
+  --fsh-paper: #f5f7fa;
+
+  --fsh-mint: #3cf0b4;
+  --fsh-mint-hover: #7af6cc;
+  --fsh-cyan: #22c8ee;
+  --fsh-coral: #ff6b3d;
+  --fsh-coral-hover: #ff8a63;
+  --fsh-warning: #ffc857;
+  --fsh-danger: #ff5c6c;
+  --fsh-lime: #b8f23a;
+
+  --fsh-mint-rgb: 60, 240, 180;
+  --fsh-cyan-rgb: 34, 200, 238;
+  --fsh-coral-rgb: 255, 107, 61;
+  --fsh-warning-rgb: 255, 200, 87;
+  --fsh-lime-rgb: 184, 242, 58;
+
+  --fsh-grad-tech: linear-gradient(120deg, var(--fsh-cyan), var(--fsh-mint));
+  --fsh-grad-human: linear-gradient(120deg, var(--fsh-coral), #ffb08a);
+  --fsh-glow-coral: radial-gradient(
+    circle,
+    rgba(var(--fsh-coral-rgb), 0.22),
+    transparent 70%
+  );
+  --fsh-glow-mint: radial-gradient(
+    circle,
+    rgba(var(--fsh-mint-rgb), 0.22),
+    transparent 70%
+  );
+
+  --fsh-font-display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --fsh-font-body:
+    "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --fsh-font-mono:
+    "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, Menlo,
+    monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 450ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --focus-ring:
+    0 0 0 3px var(--fsh-midnight), 0 0 0 5px var(--fsh-cyan);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+.fsh-logo {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fsh-mist);
+  text-decoration: none;
+}
+.fsh-wordmark {
+  font-family: var(--fsh-font-display);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Textura blueprint: retícula de líneas Line sobre Midnight (módulo 32 px). */
+.fsh-blueprint {
+  background-image:
+    linear-gradient(rgba(36, 48, 74, 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(36, 48, 74, 0.55) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
