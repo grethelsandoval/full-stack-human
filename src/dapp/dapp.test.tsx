@@ -29,6 +29,11 @@ import {
   scoreResponses,
 } from "./humanStackCheck";
 import { credentialId, firstName } from "./profile";
+import {
+  bookingFromEscrow,
+  bookingsToRestore,
+  statusFromEscrow,
+} from "./recovery";
 import { isDAppPath, parseRoute, type Route, routeToHash } from "./routes";
 import { buildMonthGrid, isSelectableDay } from "./scheduling";
 import Catalog from "./screens/Catalog";
@@ -156,8 +161,8 @@ describe("catálogo", () => {
   it("offers the three available modules with their psychologists", () => {
     expect(catalog.map((m) => [m.skill, m.psychologist.name])).toEqual([
       ["Regulación de metas", "Madai Aramayo"],
-      ["Habilidad de trabajo en equipo", "Yohana Condori"],
-      ["Regulación de la confianza", "Shirley Ali"],
+      ["Habilidad para el trabajo en equipo", "Yohana Condori"],
+      ["Regulación de la autoconfianza", "Shirley Ali"],
     ]);
   });
 
@@ -206,7 +211,7 @@ describe("sesiones y escrow", () => {
       "e-2",
     );
     expect(payload.amount).toBe(3);
-    expect(payload.title).toBe("Regulación de la confianza · Sesión 2");
+    expect(payload.title).toBe("Regulación de la autoconfianza · Sesión 2");
     expect(payload.roles).toMatchObject({
       approver: WALLET,
       releaseSigner: WALLET,
@@ -278,6 +283,60 @@ describe("sesiones y escrow", () => {
   });
 });
 
+describe("recuperación desde blockchain", () => {
+  const escrow = {
+    contractId: "CRECOVERED000001",
+    engagementId: "regulacion-de-la-confianza-s2-MG3K9ZQ1",
+    description:
+      "Sesión 2 (45 min, 1 a 1) … Agendada para Martes 13 oct 2026 2026-10-13T23:00:00.000Z. El pago se libera…",
+    amount: 3,
+    balance: 3,
+    flags: {},
+  };
+
+  it("rebuilds a booking from the escrow engagement id and description", () => {
+    const restored = bookingFromEscrow(escrow, WALLET, "America/La_Paz");
+    expect(restored).toMatchObject({
+      moduleId: "regulacion-de-la-confianza",
+      sessionNumber: 2,
+      sessionAt: "2026-10-13T23:00:00.000Z",
+      status: "funded",
+      amount: 3,
+    });
+    expect(
+      bookingFromEscrow(
+        { ...escrow, engagementId: "FSH-MOD-01-ABC" },
+        WALLET,
+        "UTC",
+      ),
+    ).toBeNull();
+  });
+
+  it("maps escrow flags to the booking status", () => {
+    expect(statusFromEscrow({ ...escrow, balance: 0 })).toBe("created");
+    expect(statusFromEscrow({ ...escrow, flags: { approved: true } })).toBe(
+      "approved",
+    );
+    expect(statusFromEscrow({ ...escrow, flags: { released: true } })).toBe(
+      "released",
+    );
+    expect(statusFromEscrow({ ...escrow, flags: { disputed: true } })).toBe(
+      "disputed",
+    );
+  });
+
+  it("restores missing bookings and only moves local ones forward", () => {
+    const chain = bookingFromEscrow(escrow, WALLET, "UTC")!;
+    expect(bookingsToRestore([], [chain])).toEqual([chain]);
+    const local = booking({ contractId: chain.contractId, status: "released" });
+    expect(bookingsToRestore([local], [chain])).toEqual([]);
+    const behind = booking({ contractId: chain.contractId, status: "created" });
+    expect(bookingsToRestore([behind], [chain])).toEqual([
+      { ...behind, status: "funded" },
+    ]);
+  });
+});
+
 describe("pantallas", () => {
   it("login uses Google", () => {
     render(<Login configured onLogin={vi.fn()} />);
@@ -318,7 +377,9 @@ describe("pantallas", () => {
     expect(
       screen.getByText("Una capa para empezar a explorar"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Regulación de la confianza")).toBeInTheDocument();
+    expect(
+      screen.getByText("Regulación de la autoconfianza"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/No es el BESSI ni una versión oficial del BESSI/),
     ).toBeInTheDocument();
@@ -440,7 +501,7 @@ describe("pantallas", () => {
     expect(screen.getByText("Camila Rojas")).toBeInTheDocument();
     expect(
       screen.getByRole("img", {
-        name: /Credencial de Regulación de la confianza, capa Firewall \(Resiliencia emocional\)/,
+        name: /Credencial de Regulación de la autoconfianza, capa Firewall \(Resiliencia emocional\)/,
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Verificado en blockchain")).toBeInTheDocument();

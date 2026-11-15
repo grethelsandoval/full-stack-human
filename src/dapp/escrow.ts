@@ -3,6 +3,7 @@ import {
   useApproveMilestone,
   useFundEscrow,
   useGetEscrowFromIndexerByContractIds,
+  useGetEscrowsFromIndexerByRole,
   useInitializeEscrow,
   useReleaseFunds,
   useSendTransaction,
@@ -101,6 +102,8 @@ export interface EscrowActions {
     signer: EscrowSigner,
   ) => Promise<string | undefined>;
   read: (contractId: string) => Promise<GetEscrowsFromIndexerResponse | null>;
+  /** Escrows en los que la wallet es quien aprueba (la persona que entrena). */
+  listMine: (address: string) => Promise<GetEscrowsFromIndexerResponse[]>;
 }
 
 export function useEscrow(): EscrowActions {
@@ -111,6 +114,7 @@ export function useEscrow(): EscrowActions {
   const { startDispute } = useStartDispute();
   const { sendTransaction } = useSendTransaction();
   const { getEscrowByContractIds } = useGetEscrowFromIndexerByContractIds();
+  const { getEscrowsByRole } = useGetEscrowsFromIndexerByRole();
 
   const signAndSend = useCallback(
     async (
@@ -229,8 +233,20 @@ export function useEscrow(): EscrowActions {
     [getEscrowByContractIds],
   );
 
+  const listMine = useCallback<EscrowActions["listMine"]>(
+    async (address) => {
+      const escrows = await getEscrowsByRole({
+        role: "approver",
+        roleAddress: address,
+        orderDirection: "desc",
+      });
+      return Array.isArray(escrows) ? escrows : [];
+    },
+    [getEscrowsByRole],
+  );
+
   return useMemo(
-    () => ({ deploy, fund, approve, release, dispute, read }),
-    [deploy, fund, approve, release, dispute, read],
+    () => ({ deploy, fund, approve, release, dispute, read, listMine }),
+    [deploy, fund, approve, release, dispute, read, listMine],
   );
 }

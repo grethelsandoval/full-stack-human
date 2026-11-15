@@ -156,8 +156,8 @@ export default function ModuleDetail({
           <ol className="fa-steps fa-mt-6">
             <li>
               <span>
-                <b>Sesión 1:</b> tu psicóloga aplica el BESSI oficial y el Big
-                Five. El BESSI dice qué entrenar; el Big Five, cómo.
+                <b>Sesión 1:</b> se aplica el BESSI y un test Big Five. El BESSI
+                dice qué entrenar; el Big Five, cómo.
               </span>
             </li>
             <li>
@@ -176,6 +176,9 @@ export default function ModuleDetail({
               </span>
             </li>
           </ol>
+          <p className="fa-xs fa-muted">
+            Licencia comercial del BESSI en gestión.
+          </p>
           <div className="fa-mt-12">
             <Alert tone="ok" icon={<Lock size={20} />}>
               <b>Tu pago se libera solo cuando la sesión ocurre.</b> Queda en

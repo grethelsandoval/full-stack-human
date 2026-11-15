@@ -9,7 +9,7 @@ function sessionNote(booking: Booking) {
   switch (booking.status) {
     case "released":
       return booking.sessionNumber === 1
-        ? "BESSI oficial + Big Five · pago liberado"
+        ? "BESSI + Big Five · pago liberado"
         : "Confirmada · pago liberado";
     case "funded":
       return `Agendada · ${booking.amount}.00 USDC en escrow`;

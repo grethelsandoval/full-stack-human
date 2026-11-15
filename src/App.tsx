@@ -127,9 +127,7 @@ export default function App() {
           <div className="hero-fade" />
           <div className="container hero-layout">
             <div className="hero-copy">
-              <p className="terminal-label">
-                fsh pitch --2026
-              </p>
+              <p className="terminal-label">fsh pitch --2026</p>
               <h1>
                 Tu arquitectura técnica ya es fuerte.{" "}
                 <span className="accent-mint">
@@ -138,9 +136,9 @@ export default function App() {
               </h1>
               <p className="lead">
                 Full Stack Human es un hub de entrenamiento personalizado de
-                habilidades blandas para builders en blockchain y Web3:
-                sesiones 1 a 1 en vivo con psicólogas y psicólogos, adaptadas a
-                tu personalidad.
+                habilidades blandas para builders en blockchain y Web3: sesiones
+                1 a 1 en vivo con psicólogos y psicólogas, adaptadas a tu
+                personalidad.
               </p>
               <div className="hero-actions">
                 <a href="/app" className="button button-primary">
@@ -173,7 +171,8 @@ export default function App() {
               <div>
                 <SectionLabel number="01">EL PROBLEMA</SectionLabel>
                 <h2>
-                  El bug no está <span className="accent-coral">en el código.</span>
+                  El bug no está{" "}
+                  <span className="accent-coral">en el código.</span>
                 </h2>
               </div>
               <p className="lead">
@@ -211,7 +210,9 @@ export default function App() {
                 la resiliencia, flexibilidad y agilidad, y el liderazgo e
                 influencia social.
               </p>
-              <Source>World Economic Forum, 2025 · The Future of Jobs Report</Source>
+              <Source>
+                World Economic Forum, 2025 · The Future of Jobs Report
+              </Source>
             </div>
           </div>
         </section>
@@ -283,7 +284,7 @@ export default function App() {
                 <header className="layer-column-head">
                   <h4 id="layer-transversales">Transversales</h4>
                   <span className="mono">
-                    (facetas compuestas) · {transversalSkills.length}
+                    (Habilidades compuestas) · {transversalSkills.length}
                   </span>
                 </header>
                 <ul className="layer-skills">
@@ -300,7 +301,9 @@ export default function App() {
               «Un marco científico validado de 32 habilidades sociales,
               emocionales y conductuales en cinco dominios, con adaptación al
               español y formas cortas de 96, 45 y 20 ítems.»
-              <Source>Soto et al., 2022; Postigo et al., 2024; Sewell et al., 2025</Source>
+              <Source>
+                Soto et al., 2022; Postigo et al., 2024; Sewell et al., 2025
+              </Source>
             </p>
 
             <div className="bessi-facts">
@@ -311,11 +314,11 @@ export default function App() {
                 </div>
               ))}
               <p>
-                El BESSI se publicó en el <em>Journal of Personality and Social
-                Psychology</em>, revista con revisión por pares de la APA.
-                Adaptación al español validada en adultos. Entrenable: con retos
-                conductuales semanales durante 16 semanas, mejoraron 4 de los 5
-                dominios.
+                El BESSI se publicó en el{" "}
+                <em>Journal of Personality and Social Psychology</em>, revista
+                con revisión por pares de la APA. Adaptación al español validada
+                en adultos. Entrenable: con retos conductuales semanales durante
+                16 semanas, mejoraron 4 de los 5 dominios.
                 <Source>
                   Soto et al., 2022, 2024, 2025; Postigo et al., 2024; Chen et
                   al., 2024
@@ -346,8 +349,8 @@ export default function App() {
                 ))}
               </dl>
               <Source>
-                Colquitt et al., 2000; Barrick y Mount, 1991; Joyal-Desmarais
-                et al., 2022
+                Colquitt et al., 2000; Barrick y Mount, 1991; Joyal-Desmarais et
+                al., 2022
               </Source>
             </div>
           </div>
@@ -371,7 +374,10 @@ export default function App() {
             </div>
             <div className="modules-grid">
               {modules.map((module) => (
-                <article key={module.id} className={`card module ${module.color}`}>
+                <article
+                  key={module.id}
+                  className={`card module ${module.color}`}
+                >
                   <div className="module-head">
                     <span className="icon-box">
                       <module.icon size={24} aria-hidden="true" />
@@ -425,9 +431,7 @@ export default function App() {
             <ol className="steps-grid">
               {steps.map((step, index) => (
                 <li key={step.title} className="card step">
-                  <span className="step-number mono-label">
-                    0{index + 1}
-                  </span>
+                  <span className="step-number mono-label">0{index + 1}</span>
                   <step.icon size={24} aria-hidden="true" />
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
@@ -502,7 +506,7 @@ export default function App() {
                 </h2>
               </div>
               <p className="lead">
-                Psicólogas y psicólogos que entienden grants, equipos remotos,
+                Psicólogos y psicólogas que entienden grants, equipos remotos,
                 hackathons y la velocidad de Web3.
               </p>
             </div>
@@ -521,8 +525,8 @@ export default function App() {
         <section className="final-cta fsh-blueprint">
           <div className="container">
             <p className="terminal-label">
-              medir --bessi › personalizar
-              --big-five › entrenar --1a1 › certificar --blockchain
+              medir --bessi › personalizar --big-five › entrenar --1a1 ›
+              certificar --blockchain
             </p>
             <h2>Refactoriza tu arquitectura humana.</h2>
             <div className="hero-actions centered">
@@ -588,9 +592,9 @@ export default function App() {
           {modal.type === "credential" && (
             <div className="credential-modal">
               <p>
-                Al confirmar la última sesión reclamas una credencial verificable
-                en Stellar: habilidad, capa, emisor y el registro on-chain de la
-                sesión completada.
+                Al confirmar la última sesión reclamas una credencial
+                verificable en Stellar: habilidad, capa, emisor y el registro
+                on-chain de la sesión completada.
               </p>
               <ol>
                 <li>

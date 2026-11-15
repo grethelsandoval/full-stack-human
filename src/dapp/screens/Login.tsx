@@ -47,8 +47,8 @@ export default function Login({
         </p>
         <h1 className="fa-display">Tu arquitectura técnica ya es fuerte.</h1>
         <p className="fa-lead fa-muted">
-          Ahora fortalece tu arquitectura humana. 1 a 1, en vivo, con psicólogas
-          y psicólogos.
+          Ahora fortalece tu arquitectura humana. 1 a 1, en vivo, con psicólogos
+          y psicólogas.
         </p>
       </div>
 

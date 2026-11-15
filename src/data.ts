@@ -18,8 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 
-export const repository =
-  "https://github.com/grethelsandoval/full-stack-human";
+export const repository = "https://github.com/grethelsandoval/full-stack-human";
 
 export type DomainColor = "cyan" | "coral" | "mint" | "amber" | "lime";
 
@@ -35,20 +34,20 @@ export const domains = [
       "Organización, gestión del tiempo, consistencia y regulación de la ejecución de tareas. Es la capa que sostiene todo lo demás.",
     skills: [
       "Gestión del tiempo",
-      "Habilidad organizativa",
-      "Capacidad de consistencia",
+      "Habilidades organizacionales",
+      "Capacidad para la consistencia",
       "Gestión de tareas",
-      "Gestión del detalle",
-      "Cumplimiento de normas",
+      "Gestión de detalles",
+      "Habilidades para seguir normas",
       "Gestión de responsabilidades",
       "Regulación de metas",
-      "Toma de decisiones",
+      "Habilidades para la toma de decisiones",
     ],
     code: "runtime",
   },
   {
     layer: "API",
-    name: "Compromiso Social",
+    name: "Participación Social",
     icon: Mic,
     color: "coral" satisfies DomainColor,
     title: "Lo técnico te lleva a la demo. Lo humano, a la ronda.",
@@ -59,7 +58,7 @@ export const domains = [
       "Habilidad persuasiva",
       "Habilidad expresiva",
       "Habilidad conversacional",
-      "Regulación de la energía",
+      "Regulación de energía",
     ],
     code: "api",
   },
@@ -70,12 +69,12 @@ export const domains = [
     color: "mint" satisfies DomainColor,
     title: "Async no es sinónimo de caos.",
     description:
-      "Perspectiva de otras personas, confianza, trabajo en equipo y coordinación. La capa que evita los silos en equipos remotos.",
+      "Perspectiva de otras personas, confianza, calidez social y trabajo en equipo. La capa que evita los silos en equipos remotos.",
     skills: [
-      "Toma de perspectiva",
-      "Capacidad de confianza",
-      "Calidez social",
-      "Habilidad de trabajo en equipo",
+      "Habilidad para tomar perspectiva",
+      "Capacidad para la confianza",
+      "Capacidad para la calidez social",
+      "Habilidad para el trabajo en equipo",
       "Competencia ética",
     ],
     code: "merge",
@@ -87,12 +86,12 @@ export const domains = [
     color: "amber" satisfies DomainColor,
     title: "Burnout no es un feature.",
     description:
-      "Regulación del estrés, los impulsos y la frustración; confianza y optimismo. Lo que te protege cuando el deploy falla o el deadline se acerca.",
+      "Regulación del estrés, optimismo, manejo del enfado, autoconfianza e impulsos. Lo que te protege cuando el deploy falla o el deadline se acerca.",
     skills: [
       "Regulación del estrés",
-      "Capacidad de optimismo",
-      "Manejo de la ira",
-      "Regulación de la confianza",
+      "Capacidad para el optimismo",
+      "Manejo del enfado",
+      "Regulación de la autoconfianza",
       "Regulación de impulsos",
     ],
     code: "firewall",
@@ -104,13 +103,13 @@ export const domains = [
     color: "lime" satisfies DomainColor,
     title: "Abre una rama nueva.",
     description:
-      "Generación de alternativas, procesamiento de información, creatividad y adaptación. Explorar sin perder el rumbo.",
+      "Ideas abstractas, creatividad, procesamiento de información y apertura a otras culturas. Explorar sin perder el rumbo.",
     skills: [
-      "Pensamiento abstracto",
+      "Habilidad de pensamiento abstracto",
       "Habilidad creativa",
       "Habilidad artística",
       "Competencia cultural",
-      "Procesamiento de información",
+      "Habilidad de procesamiento de información",
     ],
     code: "fork",
   },
@@ -118,7 +117,7 @@ export const domains = [
 
 export const transversalSkills = [
   "Adaptabilidad",
-  "Capacidad de independencia",
+  "Capacidad para la independencia",
   "Habilidad de autorreflexión",
 ];
 
@@ -131,9 +130,9 @@ export const modules = [
     color: "cyan" satisfies DomainColor,
     icon: Target,
     title: "Regulación de metas",
-    definition: "Fijar objetivos realistas, evaluar avances y reajustar planes.",
+    definition: "Establecer metas personales claras y ambiciosas.",
     short:
-      "Aterriza objetivos grandes en metas realistas, revisa tu avance y reajusta el plan sin perder el rumbo.",
+      "Define hacia dónde vas, revisa tu avance y ajusta el plan sin perder el rumbo.",
     psychologist: "Madai Aramayo",
   },
   {
@@ -142,8 +141,8 @@ export const modules = [
     domain: "Cooperación",
     color: "mint" satisfies DomainColor,
     icon: Users,
-    title: "Habilidad de trabajo en equipo",
-    definition: "Articular el esfuerzo propio hacia el objetivo común.",
+    title: "Habilidad para el trabajo en equipo",
+    definition: "Trabajar con otros para lograr objetivos compartidos.",
     short:
       "Ajusta tu forma de trabajar para sumar al objetivo del equipo, también cuando el trabajo es remoto y async.",
     psychologist: "Yohana Condori",
@@ -154,10 +153,10 @@ export const modules = [
     domain: "Resiliencia Emocional",
     color: "amber" satisfies DomainColor,
     icon: Shield,
-    title: "Regulación de la confianza",
-    definition: "Sostener un sentido estable de autoeficacia.",
+    title: "Regulación de la autoconfianza",
+    definition: "Mantener una actitud positiva hacia uno mismo.",
     short:
-      "Confía en lo que sabes hacer, también cuando algo sale mal o te toca exponer.",
+      "Sostén una mirada positiva sobre ti y lo que sabes hacer, también cuando algo sale mal o te toca exponer.",
     psychologist: "Shirley Ali",
   },
 ] as const;
@@ -254,7 +253,7 @@ export const steps = [
   },
   {
     icon: BookOpenCheck,
-    title: "Sesión 1: BESSI oficial + Big Five",
+    title: "Sesión 1: BESSI + Big Five",
     text: "Una psicóloga o psicólogo evalúa y calibra tu plan personalizado.",
   },
   {
@@ -279,7 +278,7 @@ export const escrowSteps = [
 export const whyUs = [
   {
     title: "Entrenan profesionales",
-    text: "Fundada por una psicóloga con experiencia en entrenamiento de habilidades blandas. Entrenan psicólogas y psicólogos del equipo interno.",
+    text: "Fundada por una psicóloga con experiencia en entrenamiento de habilidades blandas. Entrenan psicólogos y psicólogas del equipo interno.",
   },
   {
     title: "Hablamos tu idioma",

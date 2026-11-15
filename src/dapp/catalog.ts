@@ -22,10 +22,10 @@ export const LAYERS: Record<Layer, LayerInfo> = {
   api: {
     id: "api",
     name: "API",
-    domain: "Compromiso social",
+    domain: "Participación social",
     color: "#FF6B3D",
     description:
-      "Relacionado con el compromiso social: expresión, conversación, persuasión y capacidad de comunicar con otras personas.",
+      "Relacionado con la participación social: liderazgo, persuasión, expresión, conversación y energía.",
   },
   merge: {
     id: "merge",
@@ -33,7 +33,7 @@ export const LAYERS: Record<Layer, LayerInfo> = {
     domain: "Cooperación",
     color: "#3CF0B4",
     description:
-      "Relacionado con la cooperación: perspectiva de otras personas, confianza, trabajo en equipo y coordinación.",
+      "Relacionado con la cooperación: perspectiva de otras personas, confianza, calidez social y trabajo en equipo.",
   },
   firewall: {
     id: "firewall",
@@ -41,7 +41,7 @@ export const LAYERS: Record<Layer, LayerInfo> = {
     domain: "Resiliencia emocional",
     color: "#FFC857",
     description:
-      "Relacionado con la regulación frente a presión: regulación del estrés, impulsos, frustración y confianza.",
+      "Relacionado con la regulación frente a presión: regulación del estrés, optimismo, manejo del enfado, autoconfianza e impulsos.",
   },
   fork: {
     id: "fork",
@@ -49,7 +49,7 @@ export const LAYERS: Record<Layer, LayerInfo> = {
     domain: "Innovación",
     color: "#B8F23A",
     description:
-      "Relacionado con exploración y adaptación: generación de alternativas, procesamiento de información, creatividad y adaptación.",
+      "Relacionado con la innovación: ideas abstractas, creatividad, procesamiento de información y apertura a otras culturas.",
   },
 };
 
@@ -81,7 +81,7 @@ export interface TrainingModule {
   id: string;
   skill: string;
   layer: Layer;
-  /** Definición operativa FSH (documento de evidencia auditada). */
+  /** Definición oficial BESSI-Sp (Postigo et al., 2024, Apéndice B). */
   definition: string;
   summary: string;
   icon: ModuleIcon;
@@ -93,10 +93,9 @@ export const catalog: TrainingModule[] = [
     id: "regulacion-de-metas",
     skill: "Regulación de metas",
     layer: "runtime",
-    definition:
-      "Fijar objetivos realistas, evaluar avances y reajustar planes.",
+    definition: "Establecer metas personales claras y ambiciosas.",
     summary:
-      "Aterriza objetivos grandes en metas realistas, revisa tu avance y reajusta el plan sin perder el rumbo.",
+      "Define hacia dónde vas, revisa tu avance y ajusta el plan sin perder el rumbo.",
     icon: "meta",
     psychologist: {
       name: "Madai Aramayo",
@@ -106,9 +105,9 @@ export const catalog: TrainingModule[] = [
   },
   {
     id: "trabajo-en-equipo",
-    skill: "Habilidad de trabajo en equipo",
+    skill: "Habilidad para el trabajo en equipo",
     layer: "merge",
-    definition: "Articular el esfuerzo propio hacia el objetivo común.",
+    definition: "Trabajar con otros para lograr objetivos compartidos.",
     summary:
       "Ajusta tu forma de trabajar para sumar al objetivo del equipo, también cuando el trabajo es remoto y async.",
     icon: "equipo",
@@ -119,12 +118,13 @@ export const catalog: TrainingModule[] = [
     },
   },
   {
+    /* id estable: lo usan reservas y credenciales ya guardadas */
     id: "regulacion-de-la-confianza",
-    skill: "Regulación de la confianza",
+    skill: "Regulación de la autoconfianza",
     layer: "firewall",
-    definition: "Sostener un sentido estable de autoeficacia.",
+    definition: "Mantener una actitud positiva hacia uno mismo.",
     summary:
-      "Confía en lo que sabes hacer, también cuando algo sale mal o te toca exponer.",
+      "Sostén una mirada positiva sobre ti y lo que sabes hacer, también cuando algo sale mal o te toca exponer.",
     icon: "firewall",
     psychologist: {
       name: "Shirley Ali",
@@ -138,7 +138,7 @@ export const catalog: TrainingModule[] = [
 export const UPCOMING_LAYERS: { label: string; color: string }[] = [
   { label: layerLabel("api"), color: LAYERS.api.color },
   { label: layerLabel("fork"), color: LAYERS.fork.color },
-  { label: "Transversales", color: "#94A3BD" },
+  { label: "Transversales (Habilidades compuestas)", color: "#94A3BD" },
 ];
 
 export const timeSlots = [

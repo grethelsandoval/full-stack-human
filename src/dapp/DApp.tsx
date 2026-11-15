@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   advanceBooking,
   type Booking,
@@ -25,8 +25,9 @@ import {
   saveClaim,
   saveName,
 } from "./profile";
+import { bookingFromEscrow, bookingsToRestore } from "./recovery";
 import { parseRoute, type Route, routeToHash } from "./routes";
-import { formatDay } from "./scheduling";
+import { browserTimezone, formatDay } from "./scheduling";
 import Catalog from "./screens/Catalog";
 import { CheckIntro, CheckQuestions, CheckResultView } from "./screens/Check";
 import {
@@ -151,6 +152,36 @@ export default function DApp({
   }, [address, version]);
 
   const signer = address ? { address, signXdr: wallet.signXdr } : null;
+
+  // Una vez por wallet: trae sus escrows del indexador y completa o actualiza
+  // las reservas del navegador (otro dispositivo, datos borrados, etc.).
+  const escrowRef = useRef(escrow);
+  useEffect(() => {
+    escrowRef.current = escrow;
+  }, [escrow]);
+  const syncedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!address || !escrowConfigured || syncedFor.current === address) return;
+    syncedFor.current = address;
+    let cancelled = false;
+    (async () => {
+      try {
+        const escrows = await escrowRef.current.listMine(address);
+        const recovered = escrows
+          .map((item) => bookingFromEscrow(item, address, browserTimezone()))
+          .filter((item): item is Booking => item !== null);
+        const changes = bookingsToRestore(loadBookings(address), recovered);
+        if (cancelled || changes.length === 0) return;
+        changes.forEach(saveBooking);
+        setVersion((v) => v + 1);
+      } catch {
+        /* indexer unavailable: keep the local copy */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [address, escrowConfigured]);
 
   function persist(booking: Booking) {
     saveBooking(booking);

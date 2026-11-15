@@ -47,9 +47,9 @@ export function CheckIntro({
           </p>
           <div className="fa-mt-24">
             <Alert tone="info" icon={<Info size={20} />}>
-              Es un check propio inspirado en el marco BESSI, no el BESSI
-              oficial. Si agendas tu primera sesión, aplicaremos la evaluación
-              BESSI oficial completa y el Big Five para calibrar tu plan.
+              Es un check propio inspirado en el marco BESSI, no el BESSI. Si
+              agendas tu primera sesión, se aplicará el BESSI y un test Big Five
+              para calibrar tu plan.
             </Alert>
           </div>
         </div>
