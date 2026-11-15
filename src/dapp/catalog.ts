@@ -71,7 +71,7 @@ export interface Psychologist {
   name: string;
   initials: string;
   role: string;
-  /** Sala de Meet de la psicóloga. Pendiente: generación automática al agendar. */
+  /** Sala fija de Meet de la psicóloga (por ahora, la misma para todas sus sesiones). */
   meetUrl?: string;
 }
 
@@ -101,6 +101,7 @@ export const catalog: TrainingModule[] = [
       name: "Madai Aramayo",
       initials: "MA",
       role: "Psicóloga · equipo FSH",
+      meetUrl: "https://meet.google.com/ntb-rsyr-hnz",
     },
   },
   {
@@ -115,6 +116,7 @@ export const catalog: TrainingModule[] = [
       name: "Yohana Condori",
       initials: "YC",
       role: "Psicóloga · equipo FSH",
+      meetUrl: "https://meet.google.com/fjo-hygk-bof",
     },
   },
   {
@@ -130,6 +132,7 @@ export const catalog: TrainingModule[] = [
       name: "Shirley Ali",
       initials: "SA",
       role: "Psicóloga · equipo FSH",
+      meetUrl: "https://meet.google.com/xjx-byis-zvp",
     },
   },
 ];

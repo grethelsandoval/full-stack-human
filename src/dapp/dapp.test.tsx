@@ -166,6 +166,13 @@ describe("catálogo", () => {
     ]);
   });
 
+  it("gives every psychologist her own Meet room", () => {
+    for (const module of catalog)
+      expect(module.psychologist.meetUrl).toMatch(
+        /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/,
+      );
+  });
+
   it("always writes the layer with its domain", () => {
     expect(layerLabel("firewall")).toBe("Firewall (Resiliencia emocional)");
   });
